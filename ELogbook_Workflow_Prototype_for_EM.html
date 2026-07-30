@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AIIMS Saral 2.0 — E-Logbook Plugin Prototype</title>
+<style>
+  :root{
+    --navy-900:#0c2b6e;
+    --navy-800:#123a92;
+    --blue-600:#1b3fae;
+    --blue-500:#2a4fc9;
+    --blue-50:#eef2fb;
+    --gray-25:#f6f7fa;
+    --gray-100:#eef0f4;
+    --border:#e2e6ee;
+    --text-900:#1c2333;
+    --text-600:#4b5468;
+    --text-400:#8991a3;
+    --st-new-bg:#eef0f4; --st-new-fg:#5b6577;
+    --st-review-bg:#e2e9fd; --st-review-fg:#1b45c9;
+    --st-changes-bg:#fef3cd; --st-changes-fg:#92640a;
+    --st-approved-mid-bg:#e2f6ef; --st-approved-mid-fg:#0e7d5f;
+    --st-approved-bg:#dcf3e2; --st-approved-fg:#157a3d;
+    --st-rejected-bg:#fbe3e3; --st-rejected-fg:#c22a2a;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--gray-25);color:var(--text-900);}
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    height:56px;background:linear-gradient(180deg,var(--navy-800),var(--navy-900));
+    display:flex;align-items:center;gap:22px;padding:0 18px;color:#fff;position:sticky;top:0;z-index:20;
+  }
+  .brandmark{display:flex;align-items:center;gap:9px;margin-right:6px;}
+  .brandmark .logo{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--navy-900);font-weight:800;font-size:12px;letter-spacing:.5px;}
+  .brandmark .name{font-weight:700;font-size:15px;line-height:1.1;}
+  .brandmark .name small{display:block;font-weight:500;font-size:10px;opacity:.75;}
+  .topnav{display:flex;align-items:center;gap:20px;font-size:13.5px;opacity:.92;}
+  .topnav span{padding:6px 2px;border-bottom:2px solid transparent;}
+  .topnav span.active{border-color:#7fa1ff;opacity:1;font-weight:600;}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  .icon-btn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);font-size:14px;}
+  .persona-switch{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:20px;padding:4px 10px 4px 4px;}
+  .persona-switch .avatar{width:26px;height:26px;border-radius:50%;background:#fff;color:var(--navy-900);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+  .persona-switch select{background:transparent;border:none;color:#fff;font-size:12.5px;font-weight:600;outline:none;}
+  .persona-switch select option{color:#111;}
+
+  /* ---------- Layout ---------- */
+  .shell{display:flex;align-items:flex-start;}
+  .sidebar{
+    width:246px;flex:0 0 246px;background:#fff;border-right:1px solid var(--border);
+    min-height:calc(100vh - 56px);padding:16px 12px;
+  }
+  .side-section-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-400);font-weight:700;margin:18px 8px 8px;}
+  .side-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--text-600);margin-bottom:2px;}
+  .side-item .dot{width:6px;height:6px;border-radius:50%;background:var(--text-400);flex:0 0 6px;}
+  .side-item.active{background:var(--blue-50);color:var(--blue-600);font-weight:700;}
+  .side-item.active .dot{background:var(--blue-600);}
+  .side-item.clickable:hover{background:var(--gray-100);cursor:pointer;}
+  .side-item.static{opacity:.55;}
+  .side-divider{height:1px;background:var(--border);margin:14px 4px;}
+
+  .main{flex:1;min-width:0;padding:26px 30px 60px;}
+  .banner{
+    background:#fff8e6;border:1px solid #f2dfa6;color:#7a5a06;font-size:12.5px;padding:8px 14px;border-radius:8px;
+    margin-bottom:14px;display:flex;gap:8px;align-items:center;
+  }
+  .page-toolbar{margin-bottom:10px;}
+  .back-btn{display:inline-flex;align-items:center;gap:4px;}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  .page-head h1{font-size:20px;margin:0 0 4px;}
+  .page-head p{margin:0;color:var(--text-600);font-size:13px;}
+  .btn{border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;}
+  .btn-primary{background:var(--blue-600);color:#fff;}
+  .btn-primary:hover{background:var(--navy-800);}
+  .btn-ghost{background:#fff;color:var(--blue-600);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--blue-50);}
+  .btn-danger{background:#fff;color:#c22a2a;border:1px solid #f3caca;}
+  .btn-danger:hover{background:#fbe3e3;}
+  .btn-sm{padding:6px 12px;font-size:12.5px;border-radius:7px;}
+
+  .grid-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);}
+  .stat-card .num{font-size:24px;font-weight:800;color:var(--navy-900);}
+  .stat-card .lbl{font-size:12.5px;color:var(--text-600);margin-top:2px;}
+
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px;}
+  .card h3{margin:0 0 14px;font-size:14.5px;}
+  .card h3 small{color:var(--text-400);font-weight:500;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--text-400);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:0 10px 10px;border-bottom:1px solid var(--border);}
+  td{padding:12px 10px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.rowlink:hover{background:var(--gray-25);cursor:pointer;}
+  .entry-title{font-weight:700;color:var(--navy-900);}
+  .entry-sub{color:var(--text-400);font-size:11.5px;margin-top:2px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .badge.st-new{background:var(--st-new-bg);color:var(--st-new-fg);}
+  .badge.st-review{background:var(--st-review-bg);color:var(--st-review-fg);}
+  .badge.st-changes{background:var(--st-changes-bg);color:var(--st-changes-fg);}
+  .badge.st-approved-mid{background:var(--st-approved-mid-bg);color:var(--st-approved-mid-fg);}
+  .badge.st-approved{background:var(--st-approved-bg);color:var(--st-approved-fg);}
+  .badge.st-rejected{background:var(--st-rejected-bg);color:var(--st-rejected-fg);}
+
+  .role-chip{display:inline-block;background:var(--gray-100);color:var(--text-600);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:4px;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab{padding:7px 13px;border-radius:20px;font-size:12.5px;font-weight:600;color:var(--text-600);background:#fff;border:1px solid var(--border);}
+  .tab.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+
+  .search-row{margin-bottom:14px;}
+  .search-input{width:100%;max-width:380px;border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 32px;font-size:13px;background:#fbfcfe url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%238991a3" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 10px center;}
+  .search-input:focus{outline:2px solid var(--blue-500);outline-offset:1px;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field{margin-bottom:16px;}
+  .field.full{grid-column:1/-1;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-600);margin-bottom:6px;}
+  .field .hint{font-size:11px;color:var(--text-400);margin-top:4px;}
+  .field input[type=text], .field input[type=date], .field select, .field textarea{
+    width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fbfcfe;color:var(--text-900);
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .dropzone{border:1.5px dashed #c6cfe6;border-radius:10px;padding:22px;text-align:center;color:var(--text-400);font-size:12.5px;background:#fbfcfe;}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:16px;margin-top:6px;}
+
+  /* Moodle-style searchable multi-select */
+  .ms-wrap{border:1px solid var(--border);border-radius:8px;padding:9px;background:#fbfcfe;}
+  .ms-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px;min-height:0;}
+  .ms-chips:empty{margin-bottom:0;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-50);color:var(--blue-600);border:1px solid #d7e1fb;border-radius:20px;padding:3px 6px 3px 11px;font-size:12px;font-weight:700;}
+  .chip-x{cursor:pointer;font-weight:800;padding:0 3px;border-radius:50%;line-height:1;}
+  .chip-x:hover{color:#c22a2a;}
+  .ms-placeholder{font-size:12px;color:var(--text-400);}
+  .ms-search{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:12.5px;margin-bottom:7px;background:#fff;}
+  .ms-options{max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:6px;background:#fff;}
+  .ms-option{padding:7px 10px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;}
+  .ms-option:last-child{border-bottom:none;}
+  .ms-option:hover{background:var(--gray-100);}
+  .ms-option.selected{background:var(--blue-50);color:var(--blue-600);font-weight:700;}
+  .ms-check{font-size:11px;}
+  .ms-empty{padding:10px;font-size:12px;color:var(--text-400);text-align:center;}
+  .ms-count{font-size:11px;color:var(--text-400);padding:6px 2px 0;}
+
+  .detail-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start;}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:13px;margin-bottom:6px;}
+  .kv .k{color:var(--text-400);font-weight:600;}
+  .attachment{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;margin-bottom:8px;background:#fbfcfe;}
+  .attachment .clip{color:var(--blue-600);}
+
+  .thread{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+  .msg{border-radius:10px;padding:10px 13px;font-size:13px;max-width:92%;border:1px solid var(--border);}
+  .msg .who{font-weight:700;font-size:12px;margin-bottom:3px;display:flex;gap:6px;align-items:center;}
+  .msg .when{font-weight:400;color:var(--text-400);font-size:11px;}
+  .msg.role-jr{background:#f4f6fb;}
+  .msg.role-sr{background:#eef7f3;}
+  .msg.role-faculty{background:#fbf3e8;}
+
+  .stepper{display:flex;align-items:center;margin:6px 0 22px;}
+  .step{flex:1;text-align:center;position:relative;}
+  .step .circ{width:30px;height:30px;border-radius:50%;background:var(--gray-100);color:var(--text-400);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;margin:0 auto 8px;border:2px solid var(--gray-100);}
+  .step.done .circ{background:var(--blue-50);color:var(--blue-600);border-color:var(--blue-600);}
+  .step.current .circ{background:var(--blue-600);color:#fff;border-color:var(--blue-600);}
+  .step .lbl{font-size:11.5px;font-weight:700;color:var(--text-600);}
+  .step:not(:last-child)::after{content:"";position:absolute;top:15px;left:55%;width:90%;height:2px;background:var(--gray-100);z-index:0;}
+  .step.done:not(:last-child)::after{background:var(--blue-600);}
+
+  .action-panel{background:var(--blue-50);border:1px solid #d7e1fb;border-radius:var(--radius);padding:16px 18px;}
+  .action-panel h4{margin:0 0 4px;font-size:13.5px;}
+  .action-panel p{margin:0 0 12px;font-size:12px;color:var(--text-600);}
+  .action-panel textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px;font-size:12.5px;font-family:inherit;min-height:70px;margin-bottom:10px;}
+  .action-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .locked-note{display:flex;gap:8px;align-items:center;background:#f4f6fb;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-600);}
+
+  .flow-wrap{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 18px;}
+  .flow-card{flex:0 0 230px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+  .flow-card .stage-no{font-size:11px;font-weight:800;color:var(--blue-600);letter-spacing:.04em;text-transform:uppercase;}
+  .flow-card h4{margin:6px 0 8px;font-size:14px;}
+  .flow-card .who{margin-bottom:10px;}
+  .flow-card ul{margin:0;padding-left:16px;font-size:12px;color:var(--text-600);}
+  .flow-card ul li{margin-bottom:4px;}
+  .flow-arrow{align-self:center;color:var(--text-400);font-size:18px;flex:0 0 auto;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy-900);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  .caseTypeRow{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--gray-100);font-size:13px;}
+  .caseTypeRow:last-child{border-bottom:none;}
+  .switch{width:34px;height:19px;border-radius:20px;background:var(--gray-100);position:relative;display:inline-block;cursor:pointer;transition:.2s;}
+  .switch.on{background:var(--blue-600);}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.2s;}
+  .switch.on::after{left:17px;}
+  .empty{color:var(--text-400);font-size:12.5px;text-align:center;padding:26px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brandmark">
+    <div class="logo">AS</div>
+    <div class="name">AIIMS Saral<small>2.0 &middot; theme_space</small></div>
+  </div>
+  <div class="topnav">
+    <span class="active">Home</span><span>AIIMS Faculty</span><span>All Courses</span><span>SET Courses</span><span>About Us</span>
+  </div>
+  <div class="topbar-right">
+    <div class="icon-btn">🔍</div>
+    <div class="icon-btn">🔔</div>
+    <div class="icon-btn">✉️</div>
+    <div class="persona-switch">
+      <div class="avatar" id="personaAvatar">AV</div>
+      <select id="personaSelect" onchange="setPersona(this.value)">
+        <option value="jr">Dr. Ananya Verma — Junior Resident</option>
+        <option value="sr">Dr. Rohan Mehta — Senior Resident</option>
+        <option value="faculty">Dr. Rashmi Ramachandran — Faculty</option>
+        <option value="admin">Admin User — Site Administrator</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------------------------------------------------------
+   DATA
+--------------------------------------------------------------- */
+const PERSONA_NAMES = {
+  jr: "Dr. Ananya Verma", sr: "Dr. Rohan Mehta",
+  faculty: "Dr. Rashmi Ramachandran", admin: "Admin User"
+};
+const PERSONA_INITIALS = { jr:"AV", sr:"RM", faculty:"RR", admin:"AU" };
+
+/* Simulated large reviewer pools, as they would exist at a large institute */
+const SR_USERS = [
+  "Dr. Rohan Mehta","Dr. Kavya Nair","Dr. Vikram Singh","Dr. Priya Desai","Dr. Arjun Rao",
+  "Dr. Neha Kapoor","Dr. Siddharth Bose","Dr. Meera Pillai","Dr. Karan Malhotra","Dr. Ishita Sharma",
+  "Dr. Aditya Kulkarni","Dr. Sneha Reddy","Dr. Farhan Ahmed","Dr. Divya Menon","Dr. Manish Chawla",
+  "Dr. Ritika Ghosh"
+];
+const FAC_USERS = [
+  "Dr. Rashmi Ramachandran","Dr. Suresh Iyer","Dr. Anjali Bhatt","Dr. Manoj Trivedi","Dr. Leela Krishnan",
+  "Dr. Ravi Chandran","Dr. Sunita Rao","Dr. Vinay Kumar","Dr. Pooja Agarwal","Dr. Deepak Nair",
+  "Dr. Kiran Joshi","Dr. Radha Subramaniam","Dr. Ashok Verma","Dr. Nandini Pillai","Dr. Harish Bhalla",
+  "Dr. Lakshmi Narayan"
+];
+
+let entries = [
+  {
+    id:1, title:"ST-Elevation MI — ED Resuscitation", type:"Emergency Case",
+    status:"Faculty Approved", jr:"Dr. Ananya Verma",
+    srs:["Dr. Rohan Mehta"], faculty:["Dr. Rashmi Ramachandran"],
+    start:"2026-05-02", end:"2026-05-02", updatedAt:2,
+    description:"58-year-old male presented with acute chest pain and ECG changes consistent with STEMI. Led initial resuscitation, activated cath lab protocol.",
+    reflection:"Reinforced the importance of door-to-balloon time and closed-loop communication during a time-critical resuscitation.",
+    notes:"Reviewed ACC/AHA STEMI algorithm with Dr. Mehta post-case.",
+    attachments:["ECG_trace_02May.pdf","Resus_note.docx"],
+    comments:[
+      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"02 May 2026, 6:40 PM"},
+      {author:"Dr. Rohan Mehta",role:"sr",text:"Good documentation. Please add the door-to-balloon time.",time:"03 May 2026, 9:12 AM"},
+      {author:"Dr. Ananya Verma",role:"jr",text:"Updated — door-to-balloon time added to notes.",time:"03 May 2026, 11:02 AM"},
+      {author:"Dr. Rohan Mehta",role:"sr",text:"Approved. Forwarding to Faculty.",time:"03 May 2026, 11:30 AM"},
+      {author:"Dr. Rashmi Ramachandran",role:"faculty",text:"Well managed case. Approved for portfolio.",time:"04 May 2026, 4:15 PM"}
+    ]
+  },
+  {
+    id:2, title:"USG-Guided Central Line Insertion", type:"Clinical Procedure",
+    status:"In Faculty Review", jr:"Dr. Ananya Verma",
+    srs:["Dr. Kavya Nair"], faculty:["Dr. Rashmi Ramachandran"],
+    start:"2026-06-11", end:"2026-06-11", updatedAt:3,
+    description:"Performed ultrasound-guided right internal jugular central line placement under SR supervision.",
+    reflection:"Improved needle-tip visualization technique; noted the value of in-plane approach for reducing complications.",
+    notes:"Discussed complication checklist with SR before the procedure.",
+    attachments:["Procedure_checklist.pdf"],
+    comments:[
+      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"11 Jun 2026, 5:05 PM"},
+      {author:"Dr. Kavya Nair",role:"sr",text:"Technique described well. Approving for Faculty review.",time:"12 Jun 2026, 8:44 AM"}
+    ]
+  },
+  {
+    id:3, title:"Pediatric Febrile Seizure — CBD", type:"Case-Based Discussion (CBD)",
+    status:"SR Requested Changes", jr:"Dr. Ananya Verma",
+    srs:["Dr. Rohan Mehta"], faculty:["Dr. Suresh Iyer"],
+    start:"2026-06-20", end:"2026-06-20", updatedAt:4,
+    description:"Case-based discussion on evaluation and management of a simple febrile seizure in a 2-year-old.",
+    reflection:"Discussed red flags that would warrant further neuro-imaging.",
+    notes:"",
+    attachments:[],
+    comments:[
+      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"20 Jun 2026, 2:20 PM"},
+      {author:"Dr. Rohan Mehta",role:"sr",text:"Please expand the reflection section — discuss differentials you ruled out.",time:"21 Jun 2026, 10:05 AM"}
+    ]
+  },
+  {
+    id:4, title:"Manikin-Based Airway Simulation", type:"Simulation",
+    status:"In SR Review", jr:"Dr. Ananya Verma",
+    srs:["Dr. Rohan Mehta","Dr. Kavya Nair"], faculty:["Dr. Rashmi Ramachandran"],
+    start:"2026-07-01", end:"2026-07-01", updatedAt:5,
+    description:"Simulation lab session on difficult airway management using video laryngoscopy on a high-fidelity manikin.",
+    reflection:"Built confidence sequencing a difficult-airway algorithm under time pressure.",
+    notes:"Debrief notes attached.",
+    attachments:["Sim_debrief.pdf","Video_log.mp4"],
+    comments:[
+      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"01 Jul 2026, 4:50 PM"}
+    ]
+  },
+  {
+    id:5, title:"Suture Technique — Laceration Repair", type:"Clinical Procedure",
+    status:"New", jr:"Dr. Ananya Verma",
+    srs:["Dr. Kavya Nair"], faculty:["Dr. Suresh Iyer"],
+    start:"2026-07-06", end:"2026-07-06", updatedAt:6,
+    description:"Draft entry — layered suturing of a forearm laceration in the minor procedures room.",
+    reflection:"",
+    notes:"",
+    attachments:[],
+    comments:[]
+  },
+  {
+    id:6, title:"Undifferentiated Shock — Trauma Bay", type:"Clinical Case",
+    status:"Faculty Rejected", jr:"Dr. Ananya Verma",
+    srs:["Dr. Rohan Mehta"], faculty:["Dr. Rashmi Ramachandran"],
+    start:"2026-04-14", end:"2026-04-14", updatedAt:1,
+    description:"Initial trauma bay assessment of a polytrauma patient in shock.",
+    reflection:"Reviewed the shock index and fluid resuscitation thresholds.",
+    notes:"",
+    attachments:["Trauma_note.pdf"],
+    comments:[
+      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"14 Apr 2026, 8:00 PM"},
+      {author:"Dr. Rohan Mehta",role:"sr",text:"Approving for Faculty review.",time:"15 Apr 2026, 9:00 AM"},
+      {author:"Dr. Rashmi Ramachandran",role:"faculty",text:"Case description does not match the required trauma primary-survey format. Rejecting — please re-log as a new entry once corrected.",time:"16 Apr 2026, 3:40 PM"}
+    ]
+  }
+];
+let updateCounter = 6;
+
+let caseTypes = [
+  {name:"Clinical Case", on:true},
+  {name:"Clinical Procedure", on:true},
+  {name:"Emergency Case", on:true},
+  {name:"Case-Based Discussion (CBD)", on:true},
+  {name:"Simulation", on:true},
+];
+
+const statusMeta = {
+  "New":{cls:"st-new", stage:0},
+  "In SR Review":{cls:"st-review", stage:1},
+  "SR Requested Changes":{cls:"st-changes", stage:1},
+  "SR Approved":{cls:"st-approved-mid", stage:1},
+  "In Faculty Review":{cls:"st-review", stage:2},
+  "Faculty Requested Changes":{cls:"st-changes", stage:2},
+  "Faculty Rejected":{cls:"st-rejected", stage:2},
+  "Faculty Approved":{cls:"st-approved", stage:3}
+};
+const stageLabels = ["Entry Creation","Senior Resident Review","Faculty Review","Final Approval"];
+
+let state = { persona:"jr", screen:"dashboard", entryId:null, filter:"all", searchTerms:{} };
+let history = [];
+let formState = { srSelected:[], facSelected:[], srQuery:"", facQuery:"" };
+let lists = {}; // registry for search-filterable list screens
+
+/* ---------------------------------------------------------------
+   HELPERS
+--------------------------------------------------------------- */
+function badge(status){
+  const m = statusMeta[status];
+  return `<span class="badge ${m.cls}">${status}</span>`;
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function nowStamp(){ return "Just now"; }
+function sortByUpdated(list){ return [...list].sort((a,b)=> b.updatedAt - a.updatedAt); }
+
+function setPersona(p){
+  state.persona = p; state.screen = "dashboard"; state.entryId = null; state.filter = "all";
+  history = []; state.searchTerms = {};
+  renderAll();
+}
+function goto(screen, id){
+  history.push({persona: state.persona, screen: state.screen, entryId: state.entryId});
+  state.screen = screen; state.entryId = id || null;
+  if(screen === "createEntry") resetFormState();
+  renderAll(); window.scrollTo({top:0, behavior:"instant"});
+}
+function goBack(){
+  const prev = history.pop();
+  if(prev){
+    state.persona = prev.persona; state.screen = prev.screen; state.entryId = prev.entryId;
+  } else {
+    state.screen = "dashboard"; state.entryId = null;
+  }
+  renderAll(); window.scrollTo({top:0, behavior:"instant"});
+}
+function myEntries(){
+  return entries.filter(e => e.jr === PERSONA_NAMES.jr);
+}
+function assignedTo(role){
+  const name = PERSONA_NAMES[role];
+  return entries.filter(e => role === "sr" ? e.srs.includes(name) : e.faculty.includes(name));
+}
+function pendingForRole(role){
+  const wanted = role === "sr" ? "In SR Review" : "In Faculty Review";
+  return assignedTo(role).filter(e => e.status === wanted);
+}
+
+/* ---------------------------------------------------------------
+   SEARCHABLE ENTRY LISTS
+--------------------------------------------------------------- */
+function browseListHTML(id, placeholder){
+  const val = state.searchTerms[id] || "";
+  return `
+    <div class="search-row">
+      <input type="text" class="search-input" id="search_${id}" placeholder="${placeholder}" value="${val.replace(/"/g,'&quot;')}" oninput="filterList('${id}')">
+    </div>
+    <div id="list_${id}"></div>
+  `;
+}
+function registerList(id, getData, role){
+  lists[id] = { getData, role };
+}
+function initList(id){
+  renderList(id, state.searchTerms[id] || "");
+}
+function filterList(id){
+  const val = document.getElementById("search_"+id).value;
+  state.searchTerms[id] = val;
+  renderList(id, val);
+}
+function renderList(id, q){
+  const meta = lists[id];
+  if(!meta) return;
+  let list = meta.getData();
+  if(q && q.trim()){
+    const qq = q.trim().toLowerCase();
+    list = list.filter(e =>
+      e.title.toLowerCase().includes(qq) ||
+      e.type.toLowerCase().includes(qq) ||
+      e.status.toLowerCase().includes(qq) ||
+      e.jr.toLowerCase().includes(qq) ||
+      e.srs.join(" ").toLowerCase().includes(qq) ||
+      e.faculty.join(" ").toLowerCase().includes(qq)
+    );
+  }
+  document.getElementById("list_"+id).innerHTML = entryTable(sortByUpdated(list), meta.role);
+}
+
+/* ---------------------------------------------------------------
+   SIDEBAR
+--------------------------------------------------------------- */
+function sidebarHTML(){
+  const p = state.persona;
+  const item = (label, screen, active) =>
+    `<div class="side-item clickable ${active?'active':''}" onclick="goto('${screen}')"><span class="dot"></span>${label}</div>`;
+
+  let roleNav = "";
+  if(p==="jr"){
+    roleNav = `
+      <div class="side-section-label">E-Logbook</div>
+      ${item("Dashboard","dashboard", state.screen==="dashboard")}
+      ${item("Create E-Logbook Entry","createEntry", state.screen==="createEntry")}
+      ${item("Manage My Entries","manageEntries", state.screen==="manageEntries")}
+      ${item("Export Portfolio","exportPortfolio", state.screen==="exportPortfolio")}
+    `;
+  } else if(p==="sr" || p==="faculty"){
+    roleNav = `
+      <div class="side-section-label">E-Logbook</div>
+      ${item("Dashboard","dashboard", state.screen==="dashboard")}
+      ${item("Review Assigned Entries","reviewQueue", state.screen==="reviewQueue")}
+    `;
+  } else {
+    roleNav = `
+      <div class="side-section-label">E-Logbook Admin</div>
+      ${item("Dashboard","dashboard", state.screen==="dashboard")}
+      ${item("Case Type Settings","adminSettings", state.screen==="adminSettings")}
+    `;
+  }
+
+  return `
+    <div class="side-item static"><span class="dot"></span>Site home</div>
+    <div class="side-item active"><span class="dot"></span>Dashboard</div>
+    <div class="side-item static"><span class="dot"></span>Calendar</div>
+    <div class="side-item static"><span class="dot"></span>Private files</div>
+    <div class="side-item static"><span class="dot"></span>Content bank</div>
+    <div class="side-divider"></div>
+    ${roleNav}
+    <div class="side-divider"></div>
+    <div class="side-item clickable ${state.screen==='workflowOverview'?'active':''}" onclick="goto('workflowOverview')"><span class="dot"></span>Workflow Overview</div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   SCREENS — JR
+--------------------------------------------------------------- */
+function screenDashboardJR(){
+  const mine = myEntries();
+  const pending = mine.filter(e=>["In SR Review","In Faculty Review"].includes(e.status)).length;
+  const changes = mine.filter(e=>["SR Requested Changes","Faculty Requested Changes"].includes(e.status)).length;
+  const approved = mine.filter(e=>e.status==="Faculty Approved").length;
+  return `
+    <div class="page-head">
+      <div><h1>Welcome, ${PERSONA_NAMES.jr}</h1><p>Junior Resident &middot; Emergency Medicine</p></div>
+      <button class="btn btn-primary" onclick="goto('createEntry')">+ Create E-Logbook Entry</button>
+    </div>
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${mine.length}</div><div class="lbl">Total Entries</div></div>
+      <div class="stat-card"><div class="num">${pending}</div><div class="lbl">Pending Review</div></div>
+      <div class="stat-card"><div class="num">${changes}</div><div class="lbl">Changes Requested</div></div>
+      <div class="stat-card"><div class="num">${approved}</div><div class="lbl">Faculty Approved</div></div>
+    </div>
+    <div class="card">
+      <h3>My Recent E-Logbook Entries <small>newest updates first</small></h3>
+      ${entryTable(sortByUpdated(mine).slice(0,5), "jr")}
+    </div>
+  `;
+}
+function msFieldHTML(role, label){
+  return `
+    <div class="field">
+      <label>${label} <small style="font-weight:500;color:var(--text-400);">(searchable single-select)</small></label>
+      <div class="ms-wrap">
+        <div class="ms-chips" id="msChips_${role}"></div>
+        <input type="text" class="ms-search" id="msQuery_${role}" placeholder="Type a name to search ${label.toLowerCase()}..." oninput="msFilterOptions('${role}')">
+        <div class="ms-options" id="msOptions_${role}"></div>
+      </div>
+      <div class="hint">Click a name to select. Selecting a new name replaces the current one. Only active users are listed.</div>
+    </div>`;
+}
+function screenCreateEntry(){
+  const types = caseTypes.filter(c=>c.on).map(c=>`<option>${c.name}</option>`).join("");
+  return `
+    <div class="page-head">
+      <div><h1>Create E-Logbook Entry</h1><p>Record a clinical case, procedure, or learning activity for review.</p></div>
+    </div>
+    <div class="card">
+      <h3>Basic Details</h3>
+      <div class="form-grid">
+        <div class="field full"><label>Case Title</label><input type="text" placeholder="e.g. ST-Elevation MI — ED Resuscitation"></div>
+        <div class="field"><label>Case Type</label><select>${types}</select></div>
+        <div class="field"><label>Activity Date</label><input type="date"></div>
+        <div class="field full"><label>Case Description</label><textarea placeholder="Describe the clinical case or activity..."></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Reviewer Assignment <small>selected from the full active JR/SR/Faculty directory</small></h3>
+      <div class="form-grid">
+        ${msFieldHTML("sr","Senior Resident")}
+        ${msFieldHTML("fac","Faculty Member")}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Reflection</h3>
+      <div class="form-grid">
+        <div class="field full"><label>Case Reflection / Summary</label><textarea placeholder="What did you learn from this case?"></textarea></div>
+        <div class="field full"><label>Learning Notes</label><textarea placeholder="Additional learning notes..."></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Supporting Documents</h3>
+      <div class="dropzone"><input type = file > Drag files here or click to upload &nbsp;·&nbsp; PDF, DOC/DOCX, images, video </> </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="toast('Draft saved.')">Save as Draft</button>
+      <button class="btn btn-primary" onclick="toast('Entry submitted for SR review.'); goto('manageEntries')">Submit for SR Review</button>
+    </div>
+  `;
+}
+function screenManageEntries(){
+  const filter = state.filter || "all";
+  const statuses = ["all","New","In SR Review","SR Requested Changes","Faculty Requested Changes","Faculty Approved","Faculty Rejected"];
+  return `
+    <div class="page-head">
+      <div><h1>Manage My Entries</h1><p>Track status, review comments and submission history for each entry.</p></div>
+      <button class="btn btn-primary" onclick="goto('createEntry')">+ New Entry</button>
+    </div>
+    <div class="tabs">
+      ${statuses.map(s=>`<div class="tab ${filter===s?'active':''}" onclick="state.filter='${s}';renderAll()">${s==="all"?"All":s}</div>`).join("")}
+    </div>
+    <div class="card">
+      ${browseListHTML("manage","Search my entries by title, type, status, or reviewer...")}
+    </div>
+  `;
+}
+function screenExportPortfolio(){
+  const approved = sortByUpdated(myEntries().filter(e=>e.status==="Faculty Approved"));
+  return `
+    <div class="page-head"><div><h1>Export Portfolio</h1><p>Generate a consolidated record of your approved E-Logbook entries.</p></div></div>
+    <div class="card">
+      <h3>Complete Portfolio PDF</h3>
+      <p style="font-size:12.5px;color:var(--text-600);margin-top:-8px;">Includes entry details, reflections and approval history for all Faculty Approved entries.</p>
+      <table>
+        <tr><th>Title</th><th>Type</th><th>Approved By</th><th>Date</th></tr>
+        ${approved.map(e=>`<tr><td>${e.title}</td><td>${e.type}</td><td>${e.faculty.join(", ")}</td><td>${e.start}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No approved entries yet</td></tr>`}
+      </table>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="toast('Portfolio PDF generated.')">Generate PDF</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Future Export Options <small>planned for later phases</small></h3>
+      <div class="locked-note">Single Entry PDF &nbsp;·&nbsp; Annual Logbook PDF — available on request in a future release.</div>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   SCREENS — SR / FACULTY
+--------------------------------------------------------------- */
+function screenDashboardReviewer(role){
+  const assigned = assignedTo(role);
+  const pending = sortByUpdated(pendingForRole(role));
+  const approvedByMe = assigned.filter(e => role==="sr"
+    ? ["SR Approved","In Faculty Review","Faculty Approved","Faculty Requested Changes","Faculty Rejected"].includes(e.status)
+    : e.status==="Faculty Approved").length;
+  const title = role==="sr" ? "Senior Resident" : "Faculty";
+  return `
+    <div class="page-head">
+      <div><h1>Welcome, ${PERSONA_NAMES[role]}</h1><p>${title} &middot; Emergency Medicine</p></div>
+    </div>
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${assigned.length}</div><div class="lbl">Assigned to Me</div></div>
+      <div class="stat-card"><div class="num">${pending.length}</div><div class="lbl">Pending My Action</div></div>
+      <div class="stat-card"><div class="num">${approvedByMe}</div><div class="lbl">${role==="sr"?"Forwarded / Approved":"Approved"}</div></div>
+      <div class="stat-card"><div class="num">${assigned.filter(e=>e.status.includes("Requested Changes")).length}</div><div class="lbl">Changes Requested</div></div>
+    </div>
+    <div class="card">
+      <h3>Entries Awaiting My Review <small>newest updates first</small></h3>
+      ${entryTable(pending, role)}
+    </div>
+  `;
+}
+function screenReviewQueue(role){
+  return `
+    <div class="page-head"><div><h1>Review Assigned Entries</h1><p>Entries where you are the assigned ${role==="sr"?"Senior Resident":"Faculty"} reviewer.</p></div></div>
+    <div class="card">${browseListHTML("queue","Search assigned entries by title, type, status, or resident...")}</div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   ENTRY TABLE (shared, always newest/updated first)
+--------------------------------------------------------------- */
+function entryTable(list, role){
+  if(!list.length) return `<div class="empty">No entries to show.</div>`;
+  return `
+    <table>
+      <tr><th>Case</th><th>Type</th><th>Status</th><th>SR</th><th>Faculty</th><th>Date</th><th></th></tr>
+      ${list.map(e=>`
+        <tr class="rowlink" onclick="goto('entryDetail', ${e.id})">
+          <td><div class="entry-title">${e.title}</div><div class="entry-sub">Logged by ${e.jr}</div></td>
+          <td>${e.type}</td>
+          <td>${badge(e.status)}</td>
+          <td>${e.srs.join(", ")}</td>
+          <td>${e.faculty.join(", ")}</td>
+          <td>${e.start}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();goto('entryDetail', ${e.id})">${role==="jr"?"View":"Review"}</button></td>
+        </tr>`).join("")}
+    </table>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   ENTRY DETAIL
+--------------------------------------------------------------- */
+function stepperHTML(status){
+  const stage = statusMeta[status].stage;
+  return `<div class="stepper">
+    ${stageLabels.map((l,i)=>`
+      <div class="step ${i<stage?'done':''} ${i===stage?'current':''}">
+        <div class="circ">${i<stage?'✓':i+1}</div>
+        <div class="lbl">${l}</div>
+      </div>`).join("")}
+  </div>`;
+}
+function entryDetailScreen(){
+  const e = entries.find(x=>x.id===state.entryId);
+  if(!e) return `<div class="empty">Entry not found.</div>`;
+  const role = state.persona;
+  const locked = e.status === "Faculty Approved";
+
+  let actionPanel = "";
+  if(role==="jr"){
+    const editable = ["New","SR Requested Changes","Faculty Requested Changes"].includes(e.status);
+    actionPanel = editable ? `
+      <div class="action-panel">
+        <h4>Your Entry</h4>
+        <p>${e.status==="New" ? "This entry is still a draft." : "Changes were requested. Update the entry and resubmit."}</p>
+        <div class="action-row">
+          <button class="btn btn-ghost btn-sm" onclick="goto('createEntry')">Edit Entry</button>
+          <button class="btn btn-primary btn-sm" onclick="advanceStatus(${e.id}, '${e.status==='Faculty Requested Changes' ? 'In Faculty Review' : 'In SR Review'}', 'Dr. Ananya Verma','jr','Updated and resubmitted.')">Resubmit for Review</button>
+        </div>
+      </div>` : `<div class="locked-note">${locked ? "This entry is Faculty Approved and permanently locked — no edits, deletion or status changes are possible." : "This entry is under active review and cannot be edited right now."}</div>`;
+  }
+  if(role==="sr" && e.status==="In SR Review" && e.srs.includes(PERSONA_NAMES.sr)){
+    actionPanel = `
+      <div class="action-panel">
+        <h4>Senior Resident Review</h4>
+        <p>Review the submission, then request changes or approve to forward to Faculty.</p>
+        <textarea id="commentBox" placeholder="Add a comment for the resident..."></textarea>
+        <div class="action-row">
+          <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'SR Requested Changes','sr')">Request Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="reviewAction(${e.id},'In Faculty Review','sr')">Approve &amp; Forward to Faculty</button>
+        </div>
+      </div>`;
+  } else if(role==="sr" && !e.srs.includes(PERSONA_NAMES.sr)){
+    actionPanel = `<div class="locked-note">You are not an assigned Senior Resident on this entry.</div>`;
+  } else if(role==="sr"){
+    actionPanel = `<div class="locked-note">No action required — this entry is at status "${e.status}".</div>`;
+  }
+  if(role==="faculty" && e.status==="In Faculty Review" && e.faculty.includes(PERSONA_NAMES.faculty)){
+    actionPanel = `
+      <div class="action-panel">
+        <h4>Faculty Review</h4>
+        <p>Provide final academic review — approve, reject, or request modifications.</p>
+        <textarea id="commentBox" placeholder="Add academic feedback..."></textarea>
+        <div class="action-row">
+          <button class="btn btn-danger btn-sm" onclick="reviewAction(${e.id},'Faculty Rejected','faculty')">Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'Faculty Requested Changes','faculty')">Request Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="reviewAction(${e.id},'Faculty Approved','faculty')">Approve (Final)</button>
+        </div>
+      </div>`;
+  } else if(role==="faculty" && !e.faculty.includes(PERSONA_NAMES.faculty)){
+    actionPanel = `<div class="locked-note">You are not an assigned Faculty reviewer on this entry.</div>`;
+  } else if(role==="faculty"){
+    actionPanel = `<div class="locked-note">${locked ? "Approved and locked — this record is permanent." : `No action required — this entry is at status "${e.status}".`}</div>`;
+  }
+  if(role==="admin"){
+    actionPanel = `<div class="locked-note">Administrators have full read access for support and audit purposes. Status changes are made by the assigned SR / Faculty reviewers.</div>`;
+  }
+
+  return `
+    <div class="page-head">
+      <div><h1>${e.title}</h1><p>${e.type} &middot; Logged by ${e.jr} &middot; ${e.start}</p></div>
+      <div>${badge(e.status)}</div>
+    </div>
+    ${stepperHTML(e.status)}
+    <div class="detail-grid">
+      <div>
+        <div class="card">
+          <h3>Case Details</h3>
+          <div class="kv"><div class="k">Description</div><div>${e.description || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
+          <div class="kv"><div class="k">Reflection</div><div>${e.reflection || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
+          <div class="kv"><div class="k">Learning Notes</div><div>${e.notes || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
+          <div class="kv"><div class="k">Senior Resident(s)</div><div>${e.srs.map(s=>`<span class="role-chip">${s}</span>`).join("")}</div></div>
+          <div class="kv"><div class="k">Faculty</div><div>${e.faculty.map(s=>`<span class="role-chip">${s}</span>`).join("")}</div></div>
+        </div>
+        <div class="card">
+          <h3>Supporting Documents</h3>
+          ${e.attachments.length ? e.attachments.map(a=>`<div class="attachment"><span class="clip">📎</span>${a}</div>`).join("") : `<div class="empty">No files uploaded</div>`}
+        </div>
+        <div class="card">
+          <h3>Discussion &amp; Feedback History</h3>
+          <div class="thread">
+            ${e.comments.length ? e.comments.map(c=>`
+              <div class="msg role-${c.role}">
+                <div class="who">${c.author} <span class="role-chip">${c.role==='jr'?'JR':c.role==='sr'?'SR':'Faculty'}</span><span class="when">· ${c.time}</span></div>
+                ${c.text}
+              </div>`).join("") : `<div class="empty">No comments yet</div>`}
+          </div>
+        </div>
+      </div>
+      <div>
+        ${actionPanel}
+      </div>
+    </div>
+  `;
+}
+function reviewAction(id, newStatus, role){
+  const box = document.getElementById("commentBox");
+  const text = box && box.value.trim() ? box.value.trim() : (newStatus.includes("Requested") ? "Please review and revise the noted sections." : (newStatus.includes("Rejected") ? "This submission does not meet requirements." : "Reviewed and approved."));
+  advanceStatus(id, newStatus, PERSONA_NAMES[role], role, text);
+}
+function advanceStatus(id, newStatus, author, role, text){
+  const e = entries.find(x=>x.id===id);
+  e.status = newStatus;
+  e.updatedAt = ++updateCounter;
+  e.comments.push({author, role, text, time: nowStamp()});
+  toast(`Status updated → ${newStatus}`);
+  renderAll();
+}
+
+/* ---------------------------------------------------------------
+   MOODLE-STYLE MULTI-SELECT (create entry form)
+--------------------------------------------------------------- */
+function resetFormState(){
+  formState = { srSelected:[], facSelected:[], srQuery:"", facQuery:"" };
+}
+function poolFor(role){ return role==="sr" ? SR_USERS : FAC_USERS; }
+function selectedFor(role){ return role==="sr" ? formState.srSelected : formState.facSelected; }
+function labelFor(role){ return role==="sr" ? "Senior Resident" : "Faculty member"; }
+
+function msFilterOptions(role){
+  const q = document.getElementById("msQuery_"+role).value;
+  if(role==="sr") formState.srQuery = q; else formState.facQuery = q;
+  renderMsOptions(role);
+}
+function msToggle(role, name){
+  const arr = selectedFor(role);
+  const alreadySelected = arr.length && arr[0] === name;
+  arr.length = 0;
+  if(!alreadySelected) arr.push(name);
+  if(role==="sr") formState.srSelected = arr; else formState.facSelected = arr;
+  renderMsChips(role);
+  renderMsOptions(role);
+}
+function renderMsChips(role){
+  const arr = selectedFor(role);
+  const el = document.getElementById("msChips_"+role);
+  if(!el) return;
+  el.innerHTML = arr.length
+    ? arr.map(u=>`<span class="chip">${u}<span class="chip-x" onclick="msToggle('${role}','${u.replace(/'/g,"\\'")}')">×</span></span>`).join("")
+    : `<span class="ms-placeholder">No ${labelFor(role)} selected yet</span>`;
+}
+function renderMsOptions(role){
+  const q = (role==="sr" ? formState.srQuery : formState.facQuery || "").toLowerCase();
+  const pool = poolFor(role);
+  const selected = selectedFor(role);
+  const list = q ? pool.filter(u=>u.toLowerCase().includes(q)) : pool;
+  const el = document.getElementById("msOptions_"+role);
+  if(!el) return;
+  el.innerHTML = list.length
+    ? list.map(u=>`<div class="ms-option ${selected.includes(u)?'selected':''}" onclick="msToggle('${role}','${u.replace(/'/g,"\\'")}')">${u}<span class="ms-check">${selected.includes(u)?'✓':''}</span></div>`).join("")
+      + `<div class="ms-count">${list.length} of ${pool.length} shown</div>`
+    : `<div class="ms-empty">No matching users</div>`;
+}
+function initMultiSelects(){
+  renderMsChips("sr"); renderMsOptions("sr");
+  renderMsChips("fac"); renderMsOptions("fac");
+}
+
+/* ---------------------------------------------------------------
+   WORKFLOW OVERVIEW
+--------------------------------------------------------------- */
+function screenWorkflowOverview(){
+  return `
+    <div class="page-head"><div><h1>E-Logbook Workflow Overview</h1><p>Generic status-driven review workflow — Junior Resident → Senior Resident → Faculty → Final Approval.</p></div></div>
+    <div class="flow-wrap">
+      <div class="flow-card">
+        <div class="stage-no">Stage 1</div>
+        <h4>Entry Creation</h4>
+        <div class="who"><span class="role-chip">JR</span></div>
+        <ul><li>Log case / procedure / activity</li><li>Add reflection &amp; documents</li><li>Select SR &amp; Faculty reviewers</li><li>Editable until submitted</li></ul>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-card">
+        <div class="stage-no">Stage 2</div>
+        <h4>Senior Resident Review</h4>
+        <div class="who"><span class="role-chip">SR</span></div>
+        <ul><li>Review submission</li><li>Add comments</li><li>Request changes → back to JR</li><li>Approve → forward to Faculty</li></ul>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-card">
+        <div class="stage-no">Stage 3</div>
+        <h4>Faculty Review</h4>
+        <div class="who"><span class="role-chip">Faculty</span></div>
+        <ul><li>Review full submission incl. SR comments</li><li>Request changes → back to JR</li><li>Reject submission</li><li>Approve (final)</li></ul>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-card">
+        <div class="stage-no">Stage 4</div>
+        <h4>Final Approval</h4>
+        <div class="who"><span class="role-chip">Locked</span></div>
+        <ul><li>Part of official E-Portfolio</li><li>No edit / delete / status change</li><li>Available for reporting &amp; export</li></ul>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   ADMIN
+--------------------------------------------------------------- */
+function screenDashboardAdmin(){
+  const total = entries.length;
+  const pendingSR = entries.filter(e=>e.status==="In SR Review").length;
+  const pendingFac = entries.filter(e=>e.status==="In Faculty Review").length;
+  const approved = entries.filter(e=>e.status==="Faculty Approved").length;
+  return `
+    <div class="page-head"><div><h1>E-Logbook — Site Overview</h1><p>Administrator view across all residents and departments</p></div></div>
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Entries (system-wide)</div></div>
+      <div class="stat-card"><div class="num">${pendingSR}</div><div class="lbl">Pending SR Review</div></div>
+      <div class="stat-card"><div class="num">${pendingFac}</div><div class="lbl">Pending Faculty Review</div></div>
+      <div class="stat-card"><div class="num">${approved}</div><div class="lbl">Faculty Approved</div></div>
+    </div>
+    <div class="card">
+      <h3>All Entries</h3>
+      ${browseListHTML("adminAll","Search all entries by title, type, status, resident, or reviewer...")}
+    </div>
+  `;
+}
+function screenAdminSettings(){
+  return `
+    <div class="page-head"><div><h1>Case Type Settings</h1><p>Configure which case types Junior Residents can select when creating an entry.</p></div></div>
+    <div class="card">
+      <h3>Case Types</h3>
+      ${caseTypes.map((c,i)=>`
+        <div class="caseTypeRow">
+          <span>${c.name}</span>
+          <div class="switch ${c.on?'on':''}" onclick="toggleCaseType(${i})"></div>
+        </div>`).join("")}
+      <div class="form-actions" style="justify-content:flex-start;">
+        <input type="text" id="newCaseType" placeholder="Add new case type..." style="border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;width:240px;">
+        <button class="btn btn-ghost btn-sm" onclick="addCaseType()">+ Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Resident Level Field <small>existing Saral 2.0 profile field</small></h3>
+      <p style="font-size:12.5px;color:var(--text-600);margin:0;">Values: Junior Resident (JR) · Senior Resident (SR) · None — managed via User Profile or bulk CSV Upload Users.</p>
+    </div>
+  `;
+}
+function toggleCaseType(i){ caseTypes[i].on = !caseTypes[i].on; renderAll(); }
+function addCaseType(){
+  const input = document.getElementById("newCaseType");
+  if(input.value.trim()){ caseTypes.push({name:input.value.trim(), on:true}); toast("Case type added."); renderAll(); }
+}
+
+/* ---------------------------------------------------------------
+   MASTER RENDER
+--------------------------------------------------------------- */
+function mainHTML(){
+  if(state.screen==="workflowOverview") return screenWorkflowOverview();
+  const p = state.persona;
+  if(p==="jr"){
+    if(state.screen==="createEntry") return screenCreateEntry();
+    if(state.screen==="manageEntries") return screenManageEntries();
+    if(state.screen==="exportPortfolio") return screenExportPortfolio();
+    if(state.screen==="entryDetail") return entryDetailScreen();
+    return screenDashboardJR();
+  }
+  if(p==="sr" || p==="faculty"){
+    if(state.screen==="reviewQueue") return screenReviewQueue(p);
+    if(state.screen==="entryDetail") return entryDetailScreen();
+    return screenDashboardReviewer(p);
+  }
+  if(p==="admin"){
+    if(state.screen==="adminSettings") return screenAdminSettings();
+    if(state.screen==="entryDetail") return entryDetailScreen();
+    return screenDashboardAdmin();
+  }
+}
+function renderAll(){
+  document.getElementById("personaAvatar").textContent = PERSONA_INITIALS[state.persona];
+  document.getElementById("personaSelect").value = state.persona;
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("main").innerHTML = `
+    <div class="banner">🧪 <b>Prototype</b> — AIIMS Delhi E-Logbook plugin, demonstrated on the MStar LSP. Switch persona (top right) to walk through the JR → SR → Faculty workflow.</div>
+    <div class="page-toolbar">${history.length ? `<button class="btn btn-ghost btn-sm back-btn" onclick="goBack()">← Back</button>` : ""}</div>
+    ${mainHTML()}
+  `;
+
+  if(state.screen==="createEntry"){
+    initMultiSelects();
+  }
+  if(state.screen==="manageEntries"){
+    registerList("manage", () => myEntries().filter(e => state.filter==="all" || e.status===state.filter), "jr");
+    initList("manage");
+  }
+  if(state.screen==="reviewQueue"){
+    registerList("queue", () => assignedTo(state.persona), state.persona);
+    initList("queue");
+  }
+  if(state.screen==="dashboard" && state.persona==="admin"){
+    registerList("adminAll", () => entries, "admin");
+    initList("adminAll");
+  }
+}
+renderAll();
+</script>
+</body>
+</html>
