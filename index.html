@@ -88,6 +88,14 @@
   .stat-card .num{font-size:24px;font-weight:800;color:var(--navy-900);}
   .stat-card .lbl{font-size:12.5px;color:var(--text-600);margin-top:2px;}
 
+  .module-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .module-tile{background:#fbfcfe;border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s;}
+  .module-tile:hover{box-shadow:var(--shadow);border-color:var(--blue-500);background:#fff;}
+  .module-tile .mt-icon{font-size:22px;margin-bottom:8px;}
+  .module-tile .mt-label{font-weight:700;font-size:13.5px;color:var(--navy-900);margin-bottom:3px;}
+  .module-tile .mt-desc{font-size:11.5px;color:var(--text-600);margin-bottom:8px;}
+  .module-tile .mt-stat{font-size:11px;font-weight:700;color:var(--blue-600);}
+
   .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px;}
   .card h3{margin:0 0 14px;font-size:14.5px;}
   .card h3 small{color:var(--text-400);font-weight:500;}
@@ -216,9 +224,9 @@
     <div class="persona-switch">
       <div class="avatar" id="personaAvatar">AV</div>
       <select id="personaSelect" onchange="setPersona(this.value)">
-        <option value="jr">Dr. Ananya Verma — Junior Resident</option>
-        <option value="sr">Dr. Rohan Mehta — Senior Resident</option>
-        <option value="faculty">Dr. Rashmi Ramachandran — Faculty</option>
+        <option value="jr">Dr. Aastha Tiwari — Junior Resident</option>
+        <option value="sr">Dr. Pooja Raj — Senior Resident</option>
+        <option value="faculty">Dr. Akshay Kumar — Faculty</option>
         <option value="admin">Admin User — Site Administrator</option>
       </select>
     </div>
@@ -237,88 +245,117 @@
    DATA
 --------------------------------------------------------------- */
 const PERSONA_NAMES = {
-  jr: "Dr. Ananya Verma", sr: "Dr. Rohan Mehta",
-  faculty: "Dr. Rashmi Ramachandran", admin: "Admin User"
+  jr: "Dr. Aastha Tiwari", sr: "Dr. Pooja Raj",
+  faculty: "Dr. Akshay Kumar", admin: "Admin User"
 };
-const PERSONA_INITIALS = { jr:"AV", sr:"RM", faculty:"RR", admin:"AU" };
+const PERSONA_INITIALS = { jr:"AT", sr:"PR", faculty:"AK", admin:"AU" };
 
-/* Simulated large reviewer pools, as they would exist at a large institute */
+/* Real Emergency Medicine, AIIMS Delhi roster */
+const FAC_DESIGNATIONS = {
+  "Dr. Rakesh Yadav": "HOD",
+  "Dr. Saneev Bhoi": "Professor (JPNTC)",
+  "Dr. Nayar Jamshed": "Professor (Main)",
+  "Dr. Tej Prakash Sinha": "Addl. Professor (JPNTC)",
+  "Dr. Akshay Kumar": "Addl. Professor (Main)",
+  "Dr. Meera Ekka": "Addl. Professor (Main)",
+  "Dr. Prakash Ranjan Mishra": "Associate Professor (Main)",
+  "Dr. Sakshi Yadav": "Assistant Professor (Main)",
+  "Dr. Ankit Kumar Sahoo": "Assistant Professor (JPNTC)",
+  "Dr. Bharath G": "Assistant Professor (JPNTC)",
+  "Dr. Babu Mohammed Rafi": "Assistant Professor (Main)",
+  "Dr. Ashwin S Raj": "Assistant Professor (JPNTC)",
+  "Dr. Utkarsh Khandelwal": "Assistant Professor (NCI)",
+  "Dr. Surya Suresh": "Assistant Professor (Main)",
+  "Dr. Charu Malhotra": "Assistant Professor (JPNTC)",
+  "Dr. Prawal Shrimal": "Assistant Professor (JPNTC)",
+};
+const FAC_USERS = Object.keys(FAC_DESIGNATIONS);
 const SR_USERS = [
-  "Dr. Rohan Mehta","Dr. Kavya Nair","Dr. Vikram Singh","Dr. Priya Desai","Dr. Arjun Rao",
-  "Dr. Neha Kapoor","Dr. Siddharth Bose","Dr. Meera Pillai","Dr. Karan Malhotra","Dr. Ishita Sharma",
-  "Dr. Aditya Kulkarni","Dr. Sneha Reddy","Dr. Farhan Ahmed","Dr. Divya Menon","Dr. Manish Chawla",
-  "Dr. Ritika Ghosh"
+  "Dr. Pooja Raj","Dr. Sheena Arora","Dr. Aadya Pillai","Dr. Hariprasad","Dr. Shreesha Nayak",
+  "Dr. Rishu Kumar","Dr. Naazia Siddiqua","Dr. Harshitha B. S.","Dr. Gaurav Rajwanshi","Dr. Rahul Jain",
+  "Dr. Satya Prakash Rout","Dr. BL Maneesh Kumar","Dr. Arunjith G","Dr. Arun Kumar G","Dr. Gattu Maithili Charan",
+  "Dr. Debasis Pal","Dr. Vishnu Kuttan","Dr. Subrat Kumar Panda","Dr. A. Karthikeyan","Dr. Uduthanoori Hari Shankar Nikesh Kumar",
+  "Dr. Uday Krishan","Dr. Amal Abraham","Dr. Sajeer Ahmed M","Dr. Utkarsh Gaur","Dr. Arihant Jain",
+  "Dr. Barath V","Dr. Bhoomi Motwani","Dr. Bharti Gindlani","Dr. Kavya O K","Dr. Diya Ann Varghese",
+  "Dr. Munna Alsan","Dr. Muhammad Sajjad Husain","Dr. Saleek Palakursi","Dr. Ashwin Kumar V A","Dr. Surojit Roy",
+  "Dr. Akshay A K","Dr. A N Mohammed Iqbal","Dr. Shiwangini Jayswal","Dr. Naina Dnyaneshwar Meshram",
 ];
-const FAC_USERS = [
-  "Dr. Rashmi Ramachandran","Dr. Suresh Iyer","Dr. Anjali Bhatt","Dr. Manoj Trivedi","Dr. Leela Krishnan",
-  "Dr. Ravi Chandran","Dr. Sunita Rao","Dr. Vinay Kumar","Dr. Pooja Agarwal","Dr. Deepak Nair",
-  "Dr. Kiran Joshi","Dr. Radha Subramaniam","Dr. Ashok Verma","Dr. Nandini Pillai","Dr. Harish Bhalla",
-  "Dr. Lakshmi Narayan"
+/* Junior Residents — shown in the Directory module; entries in this demo are authored by the JR persona */
+const JR_USERS = [
+  "Dr. Aastha Tiwari","Dr. Mohammed Fawas K.","Dr. Amith CK","Dr. Pavan Kumar KV","Dr. Soubhik P Chakraborty",
+  "Dr. Anil Akhil","Dr. Mayuri Bhanwar","Dr. Ashwin Kumar","Dr. Harikrishnan S.","Dr. Mohamed Faizal N",
+  "Dr. Mahadev A","Dr. Ahammed Yahya","Dr. Santimoy Sing Sardar","Dr. Rithesh Kumar K R","Dr. Vidyasagar Katte",
+  "Dr. Siddharth Sai Gunti Mohan","Dr. Katlagunta Yashwanth","Dr. Sudharshanan G RM","Dr. Arun K","Dr. Aleena M Sam",
+  "Dr. Sudiksha K S","Dr. Adithi R","Dr. Nanda Kishore N","Dr. Bharath H N","Dr. Nandish C",
+  "Dr. Arshid K","Dr. Saurav Kumar","Dr. Vivek Chavhan","Dr. Prajwal Suresh Rao","Dr. Ishan Sharma",
+  "Dr. Abhisek Nayak","Dr. Abhila Leaju","Dr. Pravez Ahmad","Dr. Akhilesh Singh Chandel","Dr. Khaleel Ajmal",
+  "Dr. M Krishnapriya","Dr. Vikas Panwar","Dr. Hiba Ayisha L J","Dr. Aditya B.","Dr. Devadharshan S R",
+  "Dr. K Mahima Reddy","Dr. Aman Vishnu Sonsare","Dr. Apoorv Raghav","Dr. Md Arbaaz Ahmed","Dr. Biji Sundar",
 ];
 
 let entries = [
   {
     id:1, title:"ST-Elevation MI — ED Resuscitation", type:"Emergency Case",
-    status:"Faculty Approved", jr:"Dr. Ananya Verma",
-    srs:["Dr. Rohan Mehta"], faculty:["Dr. Rashmi Ramachandran"],
+    status:"Faculty Approved", authorRole:"jr", srScore:5, jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Pooja Raj"], faculty:["Dr. Akshay Kumar"],
     start:"2026-05-02", end:"2026-05-02", updatedAt:2,
     description:"58-year-old male presented with acute chest pain and ECG changes consistent with STEMI. Led initial resuscitation, activated cath lab protocol.",
     reflection:"Reinforced the importance of door-to-balloon time and closed-loop communication during a time-critical resuscitation.",
     notes:"Reviewed ACC/AHA STEMI algorithm with Dr. Mehta post-case.",
     attachments:["ECG_trace_02May.pdf","Resus_note.docx"],
     comments:[
-      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"02 May 2026, 6:40 PM"},
-      {author:"Dr. Rohan Mehta",role:"sr",text:"Good documentation. Please add the door-to-balloon time.",time:"03 May 2026, 9:12 AM"},
-      {author:"Dr. Ananya Verma",role:"jr",text:"Updated — door-to-balloon time added to notes.",time:"03 May 2026, 11:02 AM"},
-      {author:"Dr. Rohan Mehta",role:"sr",text:"Approved. Forwarding to Faculty.",time:"03 May 2026, 11:30 AM"},
-      {author:"Dr. Rashmi Ramachandran",role:"faculty",text:"Well managed case. Approved for portfolio.",time:"04 May 2026, 4:15 PM"}
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Submitting for SR review.",time:"02 May 2026, 6:40 PM"},
+      {author:"Dr. Pooja Raj",role:"sr",text:"Good documentation. Please add the door-to-balloon time.",time:"03 May 2026, 9:12 AM"},
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Updated — door-to-balloon time added to notes.",time:"03 May 2026, 11:02 AM"},
+      {author:"Dr. Pooja Raj",role:"sr",text:"Approved. Forwarding to Faculty.",time:"03 May 2026, 11:30 AM"},
+      {author:"Dr. Akshay Kumar",role:"faculty",text:"Well managed case. Approved for portfolio.",time:"04 May 2026, 4:15 PM"}
     ]
   },
   {
     id:2, title:"USG-Guided Central Line Insertion", type:"Clinical Procedure",
-    status:"In Faculty Review", jr:"Dr. Ananya Verma",
-    srs:["Dr. Kavya Nair"], faculty:["Dr. Rashmi Ramachandran"],
+    status:"In Faculty Review", authorRole:"jr", srScore:4, jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Sheena Arora"], faculty:["Dr. Akshay Kumar"],
     start:"2026-06-11", end:"2026-06-11", updatedAt:3,
     description:"Performed ultrasound-guided right internal jugular central line placement under SR supervision.",
     reflection:"Improved needle-tip visualization technique; noted the value of in-plane approach for reducing complications.",
     notes:"Discussed complication checklist with SR before the procedure.",
     attachments:["Procedure_checklist.pdf"],
     comments:[
-      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"11 Jun 2026, 5:05 PM"},
-      {author:"Dr. Kavya Nair",role:"sr",text:"Technique described well. Approving for Faculty review.",time:"12 Jun 2026, 8:44 AM"}
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Submitting for SR review.",time:"11 Jun 2026, 5:05 PM"},
+      {author:"Dr. Sheena Arora",role:"sr",text:"Technique described well. Approving for Faculty review.",time:"12 Jun 2026, 8:44 AM"}
     ]
   },
   {
     id:3, title:"Pediatric Febrile Seizure — CBD", type:"Case-Based Discussion (CBD)",
-    status:"SR Requested Changes", jr:"Dr. Ananya Verma",
-    srs:["Dr. Rohan Mehta"], faculty:["Dr. Suresh Iyer"],
+    status:"SR Requested Changes", authorRole:"jr", jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Pooja Raj"], faculty:["Dr. Prakash Ranjan Mishra"],
     start:"2026-06-20", end:"2026-06-20", updatedAt:4,
     description:"Case-based discussion on evaluation and management of a simple febrile seizure in a 2-year-old.",
     reflection:"Discussed red flags that would warrant further neuro-imaging.",
     notes:"",
     attachments:[],
     comments:[
-      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"20 Jun 2026, 2:20 PM"},
-      {author:"Dr. Rohan Mehta",role:"sr",text:"Please expand the reflection section — discuss differentials you ruled out.",time:"21 Jun 2026, 10:05 AM"}
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Submitting for SR review.",time:"20 Jun 2026, 2:20 PM"},
+      {author:"Dr. Pooja Raj",role:"sr",text:"Please expand the reflection section — discuss differentials you ruled out.",time:"21 Jun 2026, 10:05 AM"}
     ]
   },
   {
     id:4, title:"Manikin-Based Airway Simulation", type:"Simulation",
-    status:"In SR Review", jr:"Dr. Ananya Verma",
-    srs:["Dr. Rohan Mehta","Dr. Kavya Nair"], faculty:["Dr. Rashmi Ramachandran"],
+    status:"In SR Review", authorRole:"jr", jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Pooja Raj","Dr. Sheena Arora"], faculty:["Dr. Akshay Kumar"],
     start:"2026-07-01", end:"2026-07-01", updatedAt:5,
     description:"Simulation lab session on difficult airway management using video laryngoscopy on a high-fidelity manikin.",
     reflection:"Built confidence sequencing a difficult-airway algorithm under time pressure.",
     notes:"Debrief notes attached.",
     attachments:["Sim_debrief.pdf","Video_log.mp4"],
     comments:[
-      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"01 Jul 2026, 4:50 PM"}
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Submitting for SR review.",time:"01 Jul 2026, 4:50 PM"}
     ]
   },
   {
     id:5, title:"Suture Technique — Laceration Repair", type:"Clinical Procedure",
-    status:"New", jr:"Dr. Ananya Verma",
-    srs:["Dr. Kavya Nair"], faculty:["Dr. Suresh Iyer"],
+    status:"New", authorRole:"jr", jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Sheena Arora"], faculty:["Dr. Prakash Ranjan Mishra"],
     start:"2026-07-06", end:"2026-07-06", updatedAt:6,
     description:"Draft entry — layered suturing of a forearm laceration in the minor procedures room.",
     reflection:"",
@@ -328,29 +365,193 @@ let entries = [
   },
   {
     id:6, title:"Undifferentiated Shock — Trauma Bay", type:"Clinical Case",
-    status:"Faculty Rejected", jr:"Dr. Ananya Verma",
-    srs:["Dr. Rohan Mehta"], faculty:["Dr. Rashmi Ramachandran"],
+    status:"Faculty Rejected", authorRole:"jr", jr:"Dr. Aastha Tiwari",
+    srs:["Dr. Pooja Raj"], faculty:["Dr. Akshay Kumar"],
     start:"2026-04-14", end:"2026-04-14", updatedAt:1,
     description:"Initial trauma bay assessment of a polytrauma patient in shock.",
     reflection:"Reviewed the shock index and fluid resuscitation thresholds.",
     notes:"",
     attachments:["Trauma_note.pdf"],
     comments:[
-      {author:"Dr. Ananya Verma",role:"jr",text:"Submitting for SR review.",time:"14 Apr 2026, 8:00 PM"},
-      {author:"Dr. Rohan Mehta",role:"sr",text:"Approving for Faculty review.",time:"15 Apr 2026, 9:00 AM"},
-      {author:"Dr. Rashmi Ramachandran",role:"faculty",text:"Case description does not match the required trauma primary-survey format. Rejecting — please re-log as a new entry once corrected.",time:"16 Apr 2026, 3:40 PM"}
+      {author:"Dr. Aastha Tiwari",role:"jr",text:"Submitting for SR review.",time:"14 Apr 2026, 8:00 PM"},
+      {author:"Dr. Pooja Raj",role:"sr",text:"Approving for Faculty review.",time:"15 Apr 2026, 9:00 AM"},
+      {author:"Dr. Akshay Kumar",role:"faculty",text:"Case description does not match the required trauma primary-survey format. Rejecting — please re-log as a new entry once corrected.",time:"16 Apr 2026, 3:40 PM"}
     ]
   }
-];
-let updateCounter = 6;
+,
+  {
+    id:7, title:"Mass Casualty Triage Drill", type:"Simulation",
+    status:"In Faculty Review", authorRole:"sr", jr:"Dr. Pooja Raj",
+    srs:[], faculty:["Dr. Akshay Kumar"],
+    start:"2026-07-12", end:"2026-07-12", updatedAt:7,
+    description:"Led a department simulation on START triage, zone allocation, and team communication during a mass-casualty incident.",
+    reflection:"Identified the need for clearer role cards and earlier activation of patient tracking.",
+    notes:"Submitted directly to Faculty as an SR-authored academic activity.",
+    attachments:["MCI_drill_summary.pdf"],
+    comments:[{author:"Dr. Pooja Raj",role:"sr",text:"Submitting my SR activity for Faculty review.",time:"12 Jul 2026, 5:20 PM"}]
+  },
+  {
+    id:8, title:"Toxicology Teaching Session — Organophosphate Poisoning", type:"Clinical Case Presentation",
+    status:"Faculty Approved", authorRole:"sr", jr:"Dr. Pooja Raj",
+    srs:[], faculty:["Dr. Akshay Kumar"],
+    start:"2026-07-18", end:"2026-07-18", updatedAt:8,
+    description:"Delivered a bedside teaching session on recognition, atropinisation endpoints, and ventilatory management in organophosphate poisoning.",
+    reflection:"The session highlighted common dosing errors and the value of a standard atropine escalation checklist.",
+    notes:"Faculty-approved SR teaching activity.",
+    attachments:["Toxicology_teaching_slides.pdf"],
+    comments:[
+      {author:"Dr. Pooja Raj",role:"sr",text:"Submitting this SR teaching activity for Faculty review.",time:"18 Jul 2026, 3:10 PM"},
+      {author:"Dr. Akshay Kumar",role:"faculty",text:"Strong teaching content and appropriate clinical emphasis. Approved.",time:"19 Jul 2026, 11:00 AM"}
+    ]
+  }];
+let updateCounter = 8;
 
+/* route: "sr_faculty" = JR->SR->Faculty (standard) | "faculty_only" = JR->Faculty direct | "sr_only" = JR->SR only */
 let caseTypes = [
-  {name:"Clinical Case", on:true},
-  {name:"Clinical Procedure", on:true},
-  {name:"Emergency Case", on:true},
-  {name:"Case-Based Discussion (CBD)", on:true},
-  {name:"Simulation", on:true},
+  {name:"Clinical Case", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Clinical Procedure", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Emergency Case", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Case-Based Discussion (CBD)", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Airway Management", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"IV / Central Venous Access", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"CPR", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Reduction", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Nerve Block", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Procedural Sedation", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Chest Tube", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Lumbar Puncture", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Thoracocentesis", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Paracentesis", on:true, route:"sr_faculty", group:"Procedure"},
+  {name:"Simulation", on:true, route:"sr_faculty", group:"Academic"},
+  {name:"Clinical Case Presentation", on:true, route:"faculty_only", group:"Academic"},
+  {name:"Journal Club", on:true, route:"faculty_only", group:"Academic"},
+  {name:"Radio / Case Conference", on:true, route:"sr_only", group:"Academic"},
+  {name:"Workshop / Conference Attended", on:true, route:"faculty_only", group:"Academic"},
+  {name:"Thesis / Research / Audit", on:true, route:"faculty_only", group:"Academic"},
+  {name:"NRP", on:true, route:"faculty_only", group:"Course"},
+  {name:"PALS", on:true, route:"faculty_only", group:"Course"},
+  {name:"ATLS", on:true, route:"faculty_only", group:"Course"},
+  {name:"ACLS", on:true, route:"faculty_only", group:"Course"},
 ];
+
+/* Master list for "Log of Clinical Rotations" — condensed from the NMC/DNB EM curriculum
+   goals-of-posting text. Each rotation carries a short reference summary shown alongside
+   the log entry (full curriculum text can be substituted here without changing the form). */
+const ROTATIONS = [
+  {name:"Emergency Medicine", goals:["Rapidly evaluate, stabilise & disposition critically ill patients","Manage cardiopulmonary arrest, dysrhythmias & ACLS-guided resuscitation","Master emergency USG/FAST and rational use of diagnostics","Manage burns, environmental & toxin-related emergencies"]},
+  {name:"Surgical Emergency", goals:["Evaluate common surgical disorders presenting to the ED","Determine indications for surgical consultation in acute abdomen","Develop procedural skills relevant to surgery","Learn principles of peri-operative care"]},
+  {name:"EM Trauma", goals:["Organised assessment, resuscitation & definitive care of trauma victims","Recognise & treat immediate life/limb-threatening injuries","Special considerations: pregnant, paediatric & geriatric trauma","Systems approach to trauma & pre-hospital trauma care"]},
+  {name:"Anaesthesia", goals:["Structured airway management skills","Familiarity with anaesthetic pharmacological agents","Standard monitoring: CVP & invasive arterial BP","Ventilator settings & procedural sedation/pain management"]},
+  {name:"Cardiology", goals:["Evaluate patients presenting with chest pain","Differential diagnosis of cardiac symptomatology","Interpret ECG & Echocardiography","Cardiac procedures: pericardiocentesis, defibrillation, pacing, thrombolysis"]},
+  {name:"Neurology", goals:["Anatomy/pathophysiology of common neurological disorders","Screening & detailed neurological evaluation","Diagnostic procedures incl. lumbar puncture","Effective use of neuro-imaging"]},
+  {name:"Gastro-enterology", goals:["Pathophysiology & management of alimentary tract disease","Management of upper/lower GI bleed","Management of acute hepatic failure","Complications & management of cirrhosis"]},
+  {name:"Nephrology", goals:["Acid-base & electrolyte disturbances","Complications of renal failure & dialysis","Post renal-transplant patient management (EM relevant)","Perform peritoneal dialysis"]},
+  {name:"Paediatric Emergency", goals:["Neonatal, infant & paediatric resuscitation","Age-appropriate history, examination & growth assessment","Fluid/electrolyte management & fever/infection in children","Recognition of child abuse & psychosocial disturbance"]},
+  {name:"Paediatric ICU", goals:["Shared goals with Paediatric Emergency posting","Critical care monitoring in children","Ventilator management in paediatric patients","Cardiac, neuro & metabolic emergencies in children"]},
+  {name:"Neonatal ICU", goals:["Shared goals with Paediatric Emergency posting","Neonatal resuscitation & stabilisation","Neonatal fluid, thermal & respiratory support","Recognition of neonatal emergencies"]},
+  {name:"Trauma Orthopaedics", goals:["Shared goals with EM Trauma posting","Fracture immobilisation & splinting techniques","Reduction of dislocated joints","Compartment syndrome recognition & management"]},
+  {name:"Trauma critical care", goals:["Shared goals with EM Trauma posting","Critical care principles in trauma patients","Head-injury monitoring","Diagnose/stabilise brain, spinal cord & peripheral nerve injuries"]},
+  {name:"Pulmonary Medicine & Sleep disorders", goals:["Recognise cardinal manifestations of pulmonary disorders","Respiratory disease pathophysiology, evaluation & treatment","Ventilator management & standard monitoring","Emergencies in sleep disorders"]},
+  {name:"Haematology", goals:["Pathophysiology & management of common haematologic diseases","Diagnose/treat complications of haem-oncologic disorders","Manage chemo/radiotherapy-related complications","Peripheral blood smear examination"]},
+  {name:"Medical Oncology", goals:["Shared goals with Haematology posting","Recognise oncologic emergencies","Manage treatment-related complications","Palliative & supportive care principles"]},
+  {name:"Medicine", goals:["Complications of mechanical ventilation & haemodynamic monitoring","Continued resuscitation & post-resuscitation care","Antimicrobial agent use, choice & dosing","Differential diagnosis for general medical presentations"]},
+  {name:"Dermatology", goals:["Recognise & treat skin/mucous membrane disorders relevant to EM","Recognise different types of skin lesions","Manage dermatologic emergencies (e.g. SJS, cellulitis)"]},
+  {name:"Psychiatry", goals:["Familiarity with common psychotherapeutic agents","Interviewing techniques for psychiatric presentations","Principles of managing a violent/agitated patient"]},
+  {name:"Obstetrics & Gynaecology", goals:["Diagnose/manage abdominal pain & vaginal bleeding in women","Emergency contraception principles","Manage emergent complications of pregnancy & labour/delivery","Management of sexual assault & gynaecological trauma"]},
+  {name:"Oto-rhino laryngology", goals:["History & examination skills in ENT","Evaluation & management of common ENT problems","Facial trauma evaluation & management","Upper airway disorders & tracheostomy care"]},
+  {name:"Ophthalmology", goals:["History & examination skills in ophthalmology","Recognise & treat emergent causes of vision loss","Principles of ocular trauma management"]},
+  {name:"Forensic Medicine", goals:["Basic principles of medico-legal cases","Types of wounds & medico-legal documentation","Medico-legal aspects of gunshot wounds","Preservation of samples for medico-legal purposes"]},
+  {name:"Community Medicine", goals:["Manage common emergencies under resource constraints","Principles of inter-hospital communication & referral"]},
+  {name:"Elective", goals:["Choose a posting to upgrade any area of deficient expertise"]},
+];
+function rotationGoals(name){
+  const r = ROTATIONS.find(x=>x.name===name);
+  return r ? r.goals : [];
+}
+
+let rotationLog = [
+  {id:1, from:"2024-08-01", to:"2025-02-28", rotation:"Emergency Medicine"},
+  {id:2, from:"2025-03-01", to:"2025-03-14", rotation:"Surgical Emergency"},
+  {id:3, from:"2025-03-15", to:"2025-03-28", rotation:"Trauma Orthopaedics"},
+  {id:4, from:"2025-03-29", to:"2025-04-27", rotation:"Paediatric Emergency"},
+  {id:5, from:"2025-04-28", to:"2025-05-27", rotation:"Neonatal ICU"},
+];
+let rotationCounter = 5;
+
+/* Sequenced Clinical Procedures list with target counts (per DNB EM minimum-procedure requirements)
+   and illustrative in-progress dummy data for the fixed demo JR (Dr. Aastha Tiwari). */
+const PROCEDURES = [
+  {seq:1, name:"Basic Airway Management (BVM)", target:15},
+  {seq:2, name:"Endotracheal Intubation", target:20},
+  {seq:3, name:"IV Cannulation", target:25},
+  {seq:4, name:"Central Venous Access", target:5},
+  {seq:5, name:"CPR / Resuscitation Lead", target:10},
+  {seq:6, name:"Procedural Sedation", target:8},
+  {seq:7, name:"Chest Tube Insertion", target:4},
+  {seq:8, name:"Lumbar Puncture", target:2},
+  {seq:9, name:"Thoracocentesis", target:2},
+  {seq:10, name:"Paracentesis", target:2},
+  {seq:11, name:"Nerve Block", target:5},
+  {seq:12, name:"Wound Suturing / Reduction", target:15},
+];
+let procedureProgress = {
+  "Basic Airway Management (BVM)":14, "Endotracheal Intubation":12, "IV Cannulation":25,
+  "Central Venous Access":3, "CPR / Resuscitation Lead":6, "Procedural Sedation":5,
+  "Chest Tube Insertion":1, "Lumbar Puncture":2, "Thoracocentesis":0,
+  "Paracentesis":1, "Nerve Block":2, "Wound Suturing / Reduction":9,
+};
+
+const MODULES_STANDARD = [
+  {key:"coreCurriculum", icon:"📘", label:"Core Curriculum of EM", desc:"NMC/DNB curriculum reference & download"},
+  {key:"goalsPosting", icon:"🎯", label:"Goals of Clinical Posting", desc:"Objectives for each rotation"},
+  {key:"rotationLog", icon:"🔄", label:"Log of Clinical Rotations", desc:"Track postings & duration"},
+  {key:"createEntry", icon:"📝", label:"Activity Type / New Entry", desc:"Select activity type & log an entry"},
+  {key:"clinicalProcedures", icon:"🩺", label:"Clinical Procedures", desc:"Sequenced procedure checklist"},
+  {key:"manageEntries", icon:"📋", label:"Manage My Entries", desc:"Track submissions & status"},
+  {key:"exportLogbook", icon:"⬇️", label:"Export Logbook", desc:"PDF / CSV export"},
+];
+const MODULES_SR = [
+  {key:"coreCurriculum", icon:"📘", label:"Core Curriculum of EM", desc:"NMC/DNB curriculum reference"},
+  {key:"createEntry", icon:"📝", label:"Create SR Entry", desc:"Submit your own activity directly to Faculty"},
+  {key:"manageEntries", icon:"📋", label:"Manage My SR Entries", desc:"Track your authored submissions"},
+  {key:"reviewQueue", icon:"✅", label:"Review JR Entries", desc:"Score and review assigned JR activities"},
+  {key:"clinicalProcedures", icon:"🩺", label:"Clinical Procedures", desc:"Resident procedure progress"},
+  {key:"exportLogbook", icon:"⬇️", label:"Export Logbook", desc:"Export a resident's logbook"},
+];
+const MODULES_FACULTY = [
+  {key:"coreCurriculum", icon:"📘", label:"Core Curriculum of EM", desc:"NMC/DNB curriculum reference"},
+  {key:"allLogs", icon:"📊", label:"All Resident Logs", desc:"Live JR/SR activity and approval overview"},
+  {key:"goalsPosting", icon:"🎯", label:"Goals of Clinical Posting", desc:"Objectives for each rotation"},
+  {key:"clinicalProcedures", icon:"🩺", label:"Clinical Procedures", desc:"Resident procedure progress"},
+  {key:"reviewQueue", icon:"📋", label:"Review Assigned Entries", desc:"All JR/SR submissions awaiting you"},
+  {key:"exportLogbook", icon:"⬇️", label:"Export Logbook", desc:"Export a resident's logbook"},
+];
+function moduleStat(key, persona){
+  const doneProc = Object.values(procedureProgress).reduce((a,b)=>a+b,0);
+  const targetProc = PROCEDURES.reduce((a,p)=>a+p.target,0);
+  if(key==="rotationLog") return rotationLog.length + " postings logged";
+  if(key==="manageEntries") return myEntries().length + " entries";
+  if(key==="reviewQueue") return pendingForRole(persona).length + " pending your review";
+  if(key==="allLogs") return entries.length + " live resident logs";
+  if(key==="clinicalProcedures") return doneProc + " / " + targetProc + " logged";
+  if(key==="coreCurriculum") return "Reference & download";
+  if(key==="goalsPosting") return ROTATIONS.length + " postings";
+  if(key==="exportLogbook") return "PDF · CSV";
+  if(key==="createEntry") return caseTypes.filter(c=>c.on).length + " activity types";
+  return "";
+}
+function moduleTilesHTML(persona){
+  const mods = persona==="sr" ? MODULES_SR : persona==="faculty" ? MODULES_FACULTY : MODULES_STANDARD;
+  return `<div class="card"><h3>Modules</h3><div class="module-grid">
+    ${mods.map(m=>`
+      <div class="module-tile" onclick="goto('${m.key}')">
+        <div class="mt-icon">${m.icon}</div>
+        <div class="mt-label">${m.label}</div>
+        <div class="mt-desc">${m.desc}</div>
+        <div class="mt-stat">${moduleStat(m.key, persona)}</div>
+      </div>`).join("")}
+  </div></div>`;
+}
 
 const statusMeta = {
   "New":{cls:"st-new", stage:0},
@@ -406,15 +607,17 @@ function goBack(){
   renderAll(); window.scrollTo({top:0, behavior:"instant"});
 }
 function myEntries(){
-  return entries.filter(e => e.jr === PERSONA_NAMES.jr);
+  const role = state.persona === "sr" ? "sr" : "jr";
+  return entries.filter(e => (e.authorRole || "jr") === role && e.jr === PERSONA_NAMES[role]);
 }
+function authorRoleLabel(e){ return (e.authorRole || "jr") === "sr" ? "SR" : "JR"; }
 function assignedTo(role){
   const name = PERSONA_NAMES[role];
   return entries.filter(e => role === "sr" ? e.srs.includes(name) : e.faculty.includes(name));
 }
 function pendingForRole(role){
   const wanted = role === "sr" ? "In SR Review" : "In Faculty Review";
-  return assignedTo(role).filter(e => e.status === wanted);
+  return assignedTo(role).filter(e => e.status === wanted && (role !== "sr" || (e.authorRole || "jr") === "jr"));
 }
 
 /* ---------------------------------------------------------------
@@ -451,6 +654,7 @@ function renderList(id, q){
       e.type.toLowerCase().includes(qq) ||
       e.status.toLowerCase().includes(qq) ||
       e.jr.toLowerCase().includes(qq) ||
+      authorRoleLabel(e).toLowerCase().includes(qq) ||
       e.srs.join(" ").toLowerCase().includes(qq) ||
       e.faculty.join(" ").toLowerCase().includes(qq)
     );
@@ -471,21 +675,39 @@ function sidebarHTML(){
     roleNav = `
       <div class="side-section-label">E-Logbook</div>
       ${item("Dashboard","dashboard", state.screen==="dashboard")}
-      ${item("Create E-Logbook Entry","createEntry", state.screen==="createEntry")}
+      ${item("Core Curriculum of EM","coreCurriculum", state.screen==="coreCurriculum")}
+      ${item("Goals of Clinical Posting","goalsPosting", state.screen==="goalsPosting")}
+      ${item("Log of Clinical Rotations","rotationLog", state.screen==="rotationLog")}
+      ${item("Activity Type / New Entry","createEntry", state.screen==="createEntry")}
+      ${item("Clinical Procedures","clinicalProcedures", state.screen==="clinicalProcedures")}
       ${item("Manage My Entries","manageEntries", state.screen==="manageEntries")}
-      ${item("Export Portfolio","exportPortfolio", state.screen==="exportPortfolio")}
+      ${item("Export Logbook","exportLogbook", state.screen==="exportLogbook")}
     `;
-  } else if(p==="sr" || p==="faculty"){
+  } else if(p==="sr"){
     roleNav = `
       <div class="side-section-label">E-Logbook</div>
       ${item("Dashboard","dashboard", state.screen==="dashboard")}
+      ${item("Create My SR Entry","createEntry", state.screen==="createEntry")}
+      ${item("Manage My SR Entries","manageEntries", state.screen==="manageEntries")}
+      ${item("Review JR Entries","reviewQueue", state.screen==="reviewQueue")}
+      ${item("Clinical Procedures","clinicalProcedures", state.screen==="clinicalProcedures")}
+      ${item("Export Logbook","exportLogbook", state.screen==="exportLogbook")}
+    `;
+  } else if(p==="faculty"){
+    roleNav = `
+      <div class="side-section-label">E-Logbook</div>
+      ${item("Dashboard","dashboard", state.screen==="dashboard")}
+      ${item("All Resident Logs","allLogs", state.screen==="allLogs")}
       ${item("Review Assigned Entries","reviewQueue", state.screen==="reviewQueue")}
+      ${item("Clinical Procedures","clinicalProcedures", state.screen==="clinicalProcedures")}
+      ${item("Export Logbook","exportLogbook", state.screen==="exportLogbook")}
     `;
   } else {
     roleNav = `
       <div class="side-section-label">E-Logbook Admin</div>
       ${item("Dashboard","dashboard", state.screen==="dashboard")}
       ${item("Case Type Settings","adminSettings", state.screen==="adminSettings")}
+      ${item("Faculty & Resident Directory","directory", state.screen==="directory")}
     `;
   }
 
@@ -521,6 +743,7 @@ function screenDashboardJR(){
       <div class="stat-card"><div class="num">${changes}</div><div class="lbl">Changes Requested</div></div>
       <div class="stat-card"><div class="num">${approved}</div><div class="lbl">Faculty Approved</div></div>
     </div>
+    ${moduleTilesHTML("jr")}
     <div class="card">
       <h3>My Recent E-Logbook Entries <small>newest updates first</small></h3>
       ${entryTable(sortByUpdated(mine).slice(0,5), "jr")}
@@ -540,32 +763,35 @@ function msFieldHTML(role, label){
     </div>`;
 }
 function screenCreateEntry(){
-  const types = caseTypes.filter(c=>c.on).map(c=>`<option>${c.name}</option>`).join("");
+  const selectedType = caseTypes.filter(c=>c.on)[0];
+  const types = caseTypes.filter(c=>c.on).map(c=>`<option value="${c.name}">${c.name}</option>`).join("");
+  const isSR = state.persona === "sr";
+  const route = isSR ? "faculty_only" : (selectedType ? selectedType.route : "sr_faculty");
   return `
     <div class="page-head">
-      <div><h1>Create E-Logbook Entry</h1><p>Record a clinical case, procedure, or learning activity for review.</p></div>
+      <div><h1>${isSR ? "Create Senior Resident Entry" : "Create E-Logbook Entry"}</h1><p>${isSR ? "Record your activity and tag a Faculty reviewer directly." : "Record a clinical case, procedure, or learning activity for review."}</p></div>
     </div>
     <div class="card">
       <h3>Basic Details</h3>
       <div class="form-grid">
-        <div class="field full"><label>Case Title</label><input type="text" placeholder="e.g. ST-Elevation MI — ED Resuscitation"></div>
-        <div class="field"><label>Case Type</label><select>${types}</select></div>
-        <div class="field"><label>Activity Date</label><input type="date"></div>
-        <div class="field full"><label>Case Description</label><textarea placeholder="Describe the clinical case or activity..."></textarea></div>
+        <div class="field"><label>Case Type</label><select id="caseTypeSelect" onchange="onCaseTypeChange()">${types}</select></div>
+        <div class="field"><label>Case Title</label><input type="text" id="entryTitle" placeholder="e.g. ST-Elevation MI — ED Resuscitation"></div>
+        <div class="field"><label>Activity Date</label><input type="date" id="entryDate"></div>
+        <div class="field full"><label>Case Description</label><textarea id="entryDescription" placeholder="Describe the clinical case or activity..."></textarea></div>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="reviewerCard">
       <h3>Reviewer Assignment <small>selected from the full active JR/SR/Faculty directory</small></h3>
+      <div class="hint" id="routeHint" style="margin-bottom:12px;">${routeHintText(route)}</div>
       <div class="form-grid">
-        ${msFieldHTML("sr","Senior Resident")}
-        ${msFieldHTML("fac","Faculty Member")}
+        <div id="srFieldWrap" style="${isSR || route==='faculty_only'?'display:none;':''}">${msFieldHTML("sr","Senior Resident")}</div>
+        <div id="facFieldWrap" style="${route==='faculty_only'?'':'display:none;'}">${msFieldHTML("fac","Faculty Member")}</div>
       </div>
     </div>
     <div class="card">
-      <h3>Reflection</h3>
+      <h3>What Did You Learn?</h3>
       <div class="form-grid">
-        <div class="field full"><label>Case Reflection / Summary</label><textarea placeholder="What did you learn from this case?"></textarea></div>
-        <div class="field full"><label>Learning Notes</label><textarea placeholder="Additional learning notes..."></textarea></div>
+        <div class="field full"><label>What did you learn?</label><textarea id="entryReflection" placeholder="Summarize your learning, reflection, and key takeaways from this case/activity..."></textarea></div>
       </div>
     </div>
     <div class="card">
@@ -574,16 +800,65 @@ function screenCreateEntry(){
     </div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="toast('Draft saved.')">Save as Draft</button>
-      <button class="btn btn-primary" onclick="toast('Entry submitted for SR review.'); goto('manageEntries')">Submit for SR Review</button>
+      <button class="btn btn-primary" onclick="submitForRoute()">${submitButtonLabel(route)}</button>
     </div>
   `;
+}
+function routeHintText(route){
+  if(route==="faculty_only") return "This Case Type routes directly to <b>Faculty</b> — select the Faculty reviewer below. No Senior Resident review step is required.";
+  if(route==="sr_only") return "This Case Type is reviewed by the <b>Senior Resident only</b> — no Faculty endorsement step is required.";
+  return "This Case Type follows the standard route: <b>Senior Resident review first</b>. The SR will assign a Faculty reviewer when approving.";
+}
+function submitButtonLabel(route){
+  if(route==="faculty_only") return "Submit for Faculty Review";
+  return "Submit for SR Review";
+}
+function onCaseTypeChange(){
+  if(state.persona === "sr"){
+    document.getElementById("routeHint").innerHTML = "Senior Resident entries route directly to <b>Faculty</b>.";
+    document.getElementById("srFieldWrap").style.display = "none";
+    document.getElementById("facFieldWrap").style.display = "";
+    document.querySelector(".form-actions .btn-primary").textContent = "Submit for Faculty Review";
+    return;
+  }
+  const sel = document.getElementById("caseTypeSelect").value;
+  const ct = caseTypes.find(c=>c.name===sel);
+  const route = ct ? ct.route : "sr_faculty";
+  document.getElementById("routeHint").innerHTML = routeHintText(route);
+  document.getElementById("srFieldWrap").style.display = route==="faculty_only" ? "none" : "";
+  document.getElementById("facFieldWrap").style.display = route==="faculty_only" ? "" : "none";
+  document.querySelector(".form-actions .btn-primary").textContent = submitButtonLabel(route);
+}
+function submitForRoute(){
+  const isSR = state.persona === "sr";
+  const sel = document.getElementById("caseTypeSelect").value;
+  const ct = caseTypes.find(c=>c.name===sel);
+  const route = isSR ? "faculty_only" : (ct ? ct.route : "sr_faculty");
+  const title = (document.getElementById("entryTitle").value || "Untitled activity").trim();
+  const activityDate = document.getElementById("entryDate").value || new Date().toISOString().slice(0,10);
+  const description = document.getElementById("entryDescription").value.trim();
+  const reflection = document.getElementById("entryReflection").value.trim();
+  const faculty = formState.facSelected.length ? [...formState.facSelected] : (isSR || route==="faculty_only" ? [PERSONA_NAMES.faculty] : []);
+  const srs = !isSR && route!=="faculty_only" ? (formState.srSelected.length ? [...formState.srSelected] : [PERSONA_NAMES.sr]) : [];
+  const status = isSR || route==="faculty_only" ? "In Faculty Review" : "In SR Review";
+  const authorRole = isSR ? "sr" : "jr";
+  const author = PERSONA_NAMES[authorRole];
+  const newEntry = {
+    id: Math.max(0,...entries.map(e=>e.id))+1, title, type:sel, status, authorRole, jr:author,
+    srs, faculty, start:activityDate, end:activityDate, updatedAt:++updateCounter,
+    description, reflection, notes:"", attachments:[],
+    comments:[{author,role:authorRole,text:isSR ? "Submitting my SR activity for Faculty review." : "Submitting for review.",time:nowStamp()}]
+  };
+  entries.push(newEntry);
+  toast(isSR ? "SR entry submitted directly for Faculty review." : route==="faculty_only" ? "Entry submitted directly for Faculty review." : "Entry submitted for SR review.");
+  goto("manageEntries");
 }
 function screenManageEntries(){
   const filter = state.filter || "all";
   const statuses = ["all","New","In SR Review","SR Requested Changes","Faculty Requested Changes","Faculty Approved","Faculty Rejected"];
   return `
     <div class="page-head">
-      <div><h1>Manage My Entries</h1><p>Track status, review comments and submission history for each entry.</p></div>
+      <div><h1>${state.persona==="sr" ? "Manage My SR Entries" : "Manage My Entries"}</h1><p>Track status, review comments and submission history for each entry.</p></div>
       <button class="btn btn-primary" onclick="goto('createEntry')">+ New Entry</button>
     </div>
     <div class="tabs">
@@ -594,24 +869,162 @@ function screenManageEntries(){
     </div>
   `;
 }
-function screenExportPortfolio(){
-  const approved = sortByUpdated(myEntries().filter(e=>e.status==="Faculty Approved"));
+function daysBetween(from,to){
+  if(!from || !to) return 0;
+  const d1 = new Date(from), d2 = new Date(to);
+  const diff = Math.round((d2-d1)/(1000*60*60*24)) + 1;
+  return diff > 0 ? diff : 0;
+}
+function screenRotationLog(){
+  const rotationOptions = ROTATIONS.map(r=>`<option>${r.name}</option>`).join("");
+  const totalDays = rotationLog.reduce((s,r)=>s+daysBetween(r.from,r.to),0);
+  const rows = rotationLog.map((r,idx)=>`
+    <tr>
+      <td>${idx+1}</td>
+      <td><input type="date" value="${r.from}" onchange="updateRotationRow(${r.id},'from',this.value)"></td>
+      <td><input type="date" value="${r.to}" onchange="updateRotationRow(${r.id},'to',this.value)"></td>
+      <td>
+        <select onchange="updateRotationRow(${r.id},'rotation',this.value)">
+          ${ROTATIONS.map(x=>`<option ${x.name===r.rotation?'selected':''}>${x.name}</option>`).join("")}
+        </select>
+      </td>
+      <td>${daysBetween(r.from,r.to)} days</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="toggleGoals(${r.id})">Goals</button></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteRotationRow(${r.id})">Remove</button></td>
+    </tr>
+    <tr id="goalsRow_${r.id}" style="display:none;"><td colspan="7" style="background:var(--blue-50);">
+      <div style="font-size:12.5px;padding:8px 4px;"><b>Goals of Posting — ${r.rotation}:</b>
+        <ul style="margin:6px 0 0 18px;padding:0;">${rotationGoals(r.rotation).map(g=>`<li>${g}</li>`).join("")}</ul>
+      </div>
+    </td></tr>
+  `).join("");
   return `
-    <div class="page-head"><div><h1>Export Portfolio</h1><p>Generate a consolidated record of your approved E-Logbook entries.</p></div></div>
+    <div class="page-head">
+      <div><h1>Log of Clinical Rotations</h1><p>Log of rotation postings during graduation in EM — dates, duration, and posting-specific goals of rotation.</p></div>
+    </div>
     <div class="card">
-      <h3>Complete Portfolio PDF</h3>
-      <p style="font-size:12.5px;color:var(--text-600);margin-top:-8px;">Includes entry details, reflections and approval history for all Faculty Approved entries.</p>
+      <table>
+        <thead><tr><th>Sl.No</th><th>Date From</th><th>Date To</th><th>Rotation Posting</th><th>Duration</th><th></th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="4" style="text-align:right;font-weight:700;">Total Duration</td><td style="font-weight:700;">${totalDays} days</td><td colspan="2"></td></tr></tfoot>
+      </table>
+      <div class="form-actions" style="justify-content:flex-start;margin-top:14px;">
+        <button class="btn btn-ghost btn-sm" onclick="addRotationRow()">+ Add Rotation Posting</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Rotation Posting Master List <small>as per DNB/NMC EM curriculum — used for the dropdown above</small></h3>
+      <p style="font-size:12.5px;color:var(--text-600);">${ROTATIONS.map(r=>r.name).join(" · ")}</p>
+    </div>
+  `;
+}
+function addRotationRow(){
+  rotationCounter++;
+  rotationLog.push({id:rotationCounter, from:"", to:"", rotation:ROTATIONS[0].name});
+  renderAll();
+}
+function deleteRotationRow(id){
+  rotationLog = rotationLog.filter(r=>r.id!==id);
+  renderAll();
+}
+function updateRotationRow(id, field, value){
+  const r = rotationLog.find(x=>x.id===id);
+  if(r) r[field] = value;
+  renderAll();
+}
+function toggleGoals(id){
+  const row = document.getElementById("goalsRow_"+id);
+  row.style.display = row.style.display==="none" ? "" : "none";
+}
+function screenExportLogbook(){
+  const approved = sortByUpdated(myEntries().filter(e=>e.status==="Faculty Approved"));
+  const allMine = sortByUpdated(myEntries());
+  const doneProc = Object.values(procedureProgress).reduce((a,b)=>a+b,0);
+  const targetProc = PROCEDURES.reduce((a,p)=>a+p.target,0);
+  return `
+    <div class="page-head"><div><h1>Export Logbook</h1><p>Generate a consolidated export of the resident profile, activities, procedures, and rotation history.</p></div></div>
+    <div class="card">
+      <h3>What's Included</h3>
+      <div class="kv"><div class="k">Resident Profile</div><div>${PERSONA_NAMES.jr} · Junior Resident · Emergency Medicine</div></div>
+      <div class="kv"><div class="k">E-Logbook Entries</div><div>${allMine.length} total (${approved.length} Faculty Approved)</div></div>
+      <div class="kv"><div class="k">Clinical Procedures</div><div>${doneProc} / ${targetProc} logged across ${PROCEDURES.length} procedure types</div></div>
+      <div class="kv"><div class="k">Clinical Rotations</div><div>${rotationLog.length} postings logged</div></div>
+    </div>
+    <div class="card">
+      <h3>Approved Entries <small>included in the export</small></h3>
       <table>
         <tr><th>Title</th><th>Type</th><th>Approved By</th><th>Date</th></tr>
         ${approved.map(e=>`<tr><td>${e.title}</td><td>${e.type}</td><td>${e.faculty.join(", ")}</td><td>${e.start}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No approved entries yet</td></tr>`}
       </table>
       <div class="form-actions">
-        <button class="btn btn-primary" onclick="toast('Portfolio PDF generated.')">Generate PDF</button>
+        <button class="btn btn-ghost" onclick="toast('Logbook exported as CSV.')">Export as CSV</button>
+        <button class="btn btn-primary" onclick="toast('Logbook exported as PDF.')">Export as PDF</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   SCREENS — CORE CURRICULUM / GOALS / CLINICAL PROCEDURES
+--------------------------------------------------------------- */
+function screenCoreCurriculum(){
+  const topics = ROTATIONS.map(r=>r.name);
+  return `
+    <div class="page-head">
+      <div><h1>Core Curriculum of Emergency Medicine</h1><p>NMC / DNB Emergency Medicine curriculum reference, organised by topic area.</p></div>
+      <button class="btn btn-primary" onclick="toast('Curriculum PDF download started.')">⬇ Download Curriculum (PDF)</button>
+    </div>
+    <div class="card">
+      <h3>System-Based Topic Areas</h3>
+      <p style="font-size:12.5px;color:var(--text-600);">Content is structured the same way as the source NMC/DNB curriculum, covering core knowledge, procedures & skills, and common presenting symptoms across the following areas:</p>
+      <div class="module-grid">
+        ${topics.map(t=>`<div class="module-tile" onclick="goto('goalsPosting')"><div class="mt-label">${t}</div><div class="mt-desc">View goals & objectives</div></div>`).join("")}
       </div>
     </div>
     <div class="card">
-      <h3>Future Export Options <small>planned for later phases</small></h3>
-      <div class="locked-note">Single Entry PDF &nbsp;·&nbsp; Annual Logbook PDF — available on request in a future release.</div>
+      <h3>Reference Source</h3>
+      <p style="font-size:12.5px;color:var(--text-600);margin:0;">NMC MD-EM Curriculum &amp; NBE DNB-EM Curriculum. The on-screen layout here will mirror the department's reference image/PDF once shared — this view uses the same curriculum content.</p>
+    </div>
+  `;
+}
+function screenGoalsPosting(){
+  return `
+    <div class="page-head"><div><h1>Goals of Clinical Posting</h1><p>Objectives for each clinical rotation posting during EM training.</p></div></div>
+    ${ROTATIONS.map(r=>`
+      <div class="card">
+        <h3>${r.name}</h3>
+        <ul style="margin:0 0 0 18px;padding:0;font-size:13px;">${r.goals.map(g=>`<li style="margin-bottom:4px;">${g}</li>`).join("")}</ul>
+      </div>`).join("")}
+  `;
+}
+function screenClinicalProcedures(){
+  const rows = PROCEDURES.map(p=>{
+    const done = procedureProgress[p.name] || 0;
+    const pct = Math.min(100, Math.round((done/p.target)*100));
+    const color = pct>=100 ? "var(--st-approved-fg)" : pct>=50 ? "var(--blue-600)" : "var(--st-changes-fg)";
+    return `
+      <tr>
+        <td>${p.seq}</td>
+        <td><b>${p.name}</b></td>
+        <td>${done} / ${p.target}</td>
+        <td style="width:160px;">
+          <div style="background:var(--gray-100);border-radius:6px;height:8px;overflow:hidden;">
+            <div style="background:${color};height:8px;width:${pct}%;"></div>
+          </div>
+        </td>
+        <td>${pct>=100?'<span class="badge st-approved">Complete</span>':'<span class="badge st-review">In Progress</span>'}</td>
+      </tr>`;
+  }).join("");
+  return `
+    <div class="page-head">
+      <div><h1>Clinical Procedures</h1><p>Sequenced procedure checklist with progress against required minimum counts.</p></div>
+      <button class="btn btn-primary" onclick="goto('createEntry')">+ Log a Procedure</button>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th>Seq</th><th>Procedure</th><th>Logged / Target</th><th>Progress</th><th>Status</th></tr>
+        ${rows}
+      </table>
     </div>
   `;
 }
@@ -621,6 +1034,7 @@ function screenExportPortfolio(){
 --------------------------------------------------------------- */
 function screenDashboardReviewer(role){
   const assigned = assignedTo(role);
+  const own = role === "sr" ? myEntries() : [];
   const pending = sortByUpdated(pendingForRole(role));
   const approvedByMe = assigned.filter(e => role==="sr"
     ? ["SR Approved","In Faculty Review","Faculty Approved","Faculty Requested Changes","Faculty Rejected"].includes(e.status)
@@ -631,17 +1045,38 @@ function screenDashboardReviewer(role){
       <div><h1>Welcome, ${PERSONA_NAMES[role]}</h1><p>${title} &middot; Emergency Medicine</p></div>
     </div>
     <div class="grid-stats">
-      <div class="stat-card"><div class="num">${assigned.length}</div><div class="lbl">Assigned to Me</div></div>
+      <div class="stat-card"><div class="num">${role==="sr" ? own.length : assigned.length}</div><div class="lbl">${role==="sr" ? "My SR Entries" : "Assigned to Me"}</div></div>
       <div class="stat-card"><div class="num">${pending.length}</div><div class="lbl">Pending My Action</div></div>
-      <div class="stat-card"><div class="num">${approvedByMe}</div><div class="lbl">${role==="sr"?"Forwarded / Approved":"Approved"}</div></div>
+      <div class="stat-card"><div class="num">${approvedByMe}</div><div class="lbl">${role==="sr"?"JR Forwarded / Approved":"Approved"}</div></div>
       <div class="stat-card"><div class="num">${assigned.filter(e=>e.status.includes("Requested Changes")).length}</div><div class="lbl">Changes Requested</div></div>
     </div>
+    ${moduleTilesHTML(role)}
     <div class="card">
       <h3>Entries Awaiting My Review <small>newest updates first</small></h3>
       ${entryTable(pending, role)}
     </div>
   `;
 }
+function screenAllLogs(){
+  const total = entries.length;
+  const jrLogs = entries.filter(e=>(e.authorRole||"jr")==="jr");
+  const srLogs = entries.filter(e=>e.authorRole==="sr");
+  const approved = entries.filter(e=>e.status==="Faculty Approved").length;
+  const pending = entries.filter(e=>["In SR Review","In Faculty Review"].includes(e.status)).length;
+  const scored = jrLogs.filter(e=>e.srScore).length;
+  const avgScore = scored ? (jrLogs.reduce((sum,e)=>sum+(e.srScore||0),0)/scored).toFixed(1) : "—";
+  return `
+    <div class="page-head"><div><h1>All Resident Logs</h1><p>Live Faculty overview of every Junior and Senior Resident entry. Statistics recalculate immediately after each workflow action.</p></div></div>
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">All JR / SR Logs</div></div>
+      <div class="stat-card"><div class="num">${jrLogs.length} / ${srLogs.length}</div><div class="lbl">JR Logs / SR Logs</div></div>
+      <div class="stat-card"><div class="num">${approved}</div><div class="lbl">Faculty Approved</div></div>
+      <div class="stat-card"><div class="num">${pending}</div><div class="lbl">Pending Review</div></div>
+    </div>
+    <div class="card"><h3>Real-Time Scoring Statistics</h3><div class="kv"><div class="k">JR entries scored</div><div>${scored} of ${jrLogs.length}</div></div><div class="kv"><div class="k">Average SR score</div><div>${avgScore}${avgScore!=="—"?" / 5":""}</div></div></div>
+    <div class="card">${browseListHTML("allLogs","Search all JR/SR logs by author, role, type, status, or reviewer...")}</div>`;
+}
+
 function screenReviewQueue(role){
   return `
     <div class="page-head"><div><h1>Review Assigned Entries</h1><p>Entries where you are the assigned ${role==="sr"?"Senior Resident":"Faculty"} reviewer.</p></div></div>
@@ -656,16 +1091,17 @@ function entryTable(list, role){
   if(!list.length) return `<div class="empty">No entries to show.</div>`;
   return `
     <table>
-      <tr><th>Case</th><th>Type</th><th>Status</th><th>SR</th><th>Faculty</th><th>Date</th><th></th></tr>
+      <tr><th>Case</th><th>Author</th><th>Type</th><th>Status</th><th>SR Score</th><th>Faculty</th><th>Date</th><th></th></tr>
       ${list.map(e=>`
         <tr class="rowlink" onclick="goto('entryDetail', ${e.id})">
           <td><div class="entry-title">${e.title}</div><div class="entry-sub">Logged by ${e.jr}</div></td>
+          <td><span class="role-chip">${authorRoleLabel(e)}</span></td>
           <td>${e.type}</td>
           <td>${badge(e.status)}</td>
-          <td>${e.srs.join(", ")}</td>
-          <td>${e.faculty.join(", ")}</td>
+          <td>${e.srScore ? `${e.srScore} / 5` : "—"}</td>
+          <td>${e.faculty.join(", ") || "Not assigned"}</td>
           <td>${e.start}</td>
-          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();goto('entryDetail', ${e.id})">${role==="jr"?"View":"Review"}</button></td>
+          <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();goto('entryDetail', ${e.id})">${role==="jr" || role==="sr-author" ? "View" : "Review"}</button></td>
         </tr>`).join("")}
     </table>
   `;
@@ -674,10 +1110,11 @@ function entryTable(list, role){
 /* ---------------------------------------------------------------
    ENTRY DETAIL
 --------------------------------------------------------------- */
-function stepperHTML(status){
+function stepperHTML(status, authorRole="jr"){
   const stage = statusMeta[status].stage;
+  const labels = authorRole === "sr" ? ["Entry Creation","Submitted to Faculty","Faculty Review","Final Approval"] : stageLabels;
   return `<div class="stepper">
-    ${stageLabels.map((l,i)=>`
+    ${labels.map((l,i)=>`
       <div class="step ${i<stage?'done':''} ${i===stage?'current':''}">
         <div class="circ">${i<stage?'✓':i+1}</div>
         <div class="lbl">${l}</div>
@@ -691,50 +1128,36 @@ function entryDetailScreen(){
   const locked = e.status === "Faculty Approved";
 
   let actionPanel = "";
-  if(role==="jr"){
+  const authorRole = e.authorRole || "jr";
+  const isOwnEntry = e.jr === PERSONA_NAMES[role] && authorRole === role;
+  if((role==="jr" || role==="sr") && isOwnEntry){
     const editable = ["New","SR Requested Changes","Faculty Requested Changes"].includes(e.status);
+    const nextStatus = authorRole === "sr" ? "In Faculty Review" : (e.status==="Faculty Requested Changes" ? "In Faculty Review" : "In SR Review");
     actionPanel = editable ? `
       <div class="action-panel">
-        <h4>Your Entry</h4>
-        <p>${e.status==="New" ? "This entry is still a draft." : "Changes were requested. Update the entry and resubmit."}</p>
+        <h4>Your ${authorRole === "sr" ? "SR " : ""}Entry</h4>
+        <p>${e.status==="New" ? "This entry is still a draft." : "Changes were requested. Update and resubmit it."}</p>
         <div class="action-row">
           <button class="btn btn-ghost btn-sm" onclick="goto('createEntry')">Edit Entry</button>
-          <button class="btn btn-primary btn-sm" onclick="advanceStatus(${e.id}, '${e.status==='Faculty Requested Changes' ? 'In Faculty Review' : 'In SR Review'}', 'Dr. Ananya Verma','jr','Updated and resubmitted.')">Resubmit for Review</button>
+          <button class="btn btn-primary btn-sm" onclick="advanceStatus(${e.id}, '${nextStatus}', '${PERSONA_NAMES[role]}','${role}','Updated and resubmitted.')">Resubmit for Review</button>
         </div>
-      </div>` : `<div class="locked-note">${locked ? "This entry is Faculty Approved and permanently locked — no edits, deletion or status changes are possible." : "This entry is under active review and cannot be edited right now."}</div>`;
-  }
-  if(role==="sr" && e.status==="In SR Review" && e.srs.includes(PERSONA_NAMES.sr)){
+      </div>` : `<div class="locked-note">${locked ? "This entry is Faculty Approved and permanently locked." : "This entry is under active review and cannot be edited right now."}</div>`;
+  } else if(role==="sr" && authorRole==="jr" && e.status==="In SR Review" && e.srs.includes(PERSONA_NAMES.sr)){
+    const facOptions = FAC_USERS.map(f=>`<option ${e.faculty[0]===f?'selected':''}>${f}</option>`).join("");
     actionPanel = `
       <div class="action-panel">
         <h4>Senior Resident Review</h4>
-        <p>Review the submission, then request changes or approve to forward to Faculty.</p>
-        <textarea id="commentBox" placeholder="Add a comment for the resident..."></textarea>
+        <p>Score the JR activity from 1–5, add feedback, then request changes or forward it to Faculty.</p>
+        <div class="field"><label>JR Activity Score (1–5)</label><select id="srScoreSelect">${[1,2,3,4,5].map(n=>`<option value="${n}" ${e.srScore===n?'selected':''}>${n} / 5</option>`).join("")}</select></div>
+        <textarea id="commentBox" placeholder="Add a comment for the Junior Resident..."></textarea>
+        <div class="field" style="max-width:320px;margin-top:10px;"><label>Assign Faculty Reviewer</label><select id="facAssignSelect">${facOptions}</select></div>
         <div class="action-row">
           <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'SR Requested Changes','sr')">Request Changes</button>
-          <button class="btn btn-primary btn-sm" onclick="reviewAction(${e.id},'In Faculty Review','sr')">Approve &amp; Forward to Faculty</button>
+          <button class="btn btn-primary btn-sm" onclick="assignFacultyAndForward(${e.id})">Score, Approve &amp; Send to Faculty</button>
         </div>
       </div>`;
-  } else if(role==="sr" && !e.srs.includes(PERSONA_NAMES.sr)){
-    actionPanel = `<div class="locked-note">You are not an assigned Senior Resident on this entry.</div>`;
   } else if(role==="sr"){
-    actionPanel = `<div class="locked-note">No action required — this entry is at status "${e.status}".</div>`;
-  }
-  if(role==="faculty" && e.status==="In Faculty Review" && e.faculty.includes(PERSONA_NAMES.faculty)){
-    actionPanel = `
-      <div class="action-panel">
-        <h4>Faculty Review</h4>
-        <p>Provide final academic review — approve, reject, or request modifications.</p>
-        <textarea id="commentBox" placeholder="Add academic feedback..."></textarea>
-        <div class="action-row">
-          <button class="btn btn-danger btn-sm" onclick="reviewAction(${e.id},'Faculty Rejected','faculty')">Reject</button>
-          <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'Faculty Requested Changes','faculty')">Request Changes</button>
-          <button class="btn btn-primary btn-sm" onclick="reviewAction(${e.id},'Faculty Approved','faculty')">Approve (Final)</button>
-        </div>
-      </div>`;
-  } else if(role==="faculty" && !e.faculty.includes(PERSONA_NAMES.faculty)){
-    actionPanel = `<div class="locked-note">You are not an assigned Faculty reviewer on this entry.</div>`;
-  } else if(role==="faculty"){
-    actionPanel = `<div class="locked-note">${locked ? "Approved and locked — this record is permanent." : `No action required — this entry is at status "${e.status}".`}</div>`;
+    actionPanel = `<div class="locked-note">${authorRole==="sr" ? "This is an SR-authored entry." : "No SR review action is available for this entry."}</div>`;
   }
   if(role==="admin"){
     actionPanel = `<div class="locked-note">Administrators have full read access for support and audit purposes. Status changes are made by the assigned SR / Faculty reviewers.</div>`;
@@ -742,18 +1165,19 @@ function entryDetailScreen(){
 
   return `
     <div class="page-head">
-      <div><h1>${e.title}</h1><p>${e.type} &middot; Logged by ${e.jr} &middot; ${e.start}</p></div>
+      <div><h1>${e.title}</h1><p>${e.type} &middot; Logged by ${e.jr} <span class="role-chip">${authorRoleLabel(e)}</span> &middot; ${e.start}</p></div>
       <div>${badge(e.status)}</div>
     </div>
-    ${stepperHTML(e.status)}
+    ${stepperHTML(e.status, e.authorRole || "jr")}
     <div class="detail-grid">
       <div>
         <div class="card">
           <h3>Case Details</h3>
           <div class="kv"><div class="k">Description</div><div>${e.description || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
-          <div class="kv"><div class="k">Reflection</div><div>${e.reflection || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
-          <div class="kv"><div class="k">Learning Notes</div><div>${e.notes || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
-          <div class="kv"><div class="k">Senior Resident(s)</div><div>${e.srs.map(s=>`<span class="role-chip">${s}</span>`).join("")}</div></div>
+          <div class="kv"><div class="k">What did you learn?</div><div>${(e.reflection||e.notes) ? [e.reflection,e.notes].filter(Boolean).join(" ") : '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
+          <div class="kv"><div class="k">Author Role</div><div><span class="role-chip">${authorRoleLabel(e)}</span></div></div>
+          <div class="kv"><div class="k">Senior Resident(s)</div><div>${e.srs.length ? e.srs.map(s=>`<span class="role-chip">${s}</span>`).join("") : '<span style="color:var(--text-400)">Not applicable</span>'}</div></div>
+          <div class="kv"><div class="k">SR Activity Score</div><div>${e.srScore ? `<b>${e.srScore} / 5</b>` : '<span style="color:var(--text-400)">Not scored</span>'}</div></div>
           <div class="kv"><div class="k">Faculty</div><div>${e.faculty.map(s=>`<span class="role-chip">${s}</span>`).join("")}</div></div>
         </div>
         <div class="card">
@@ -776,6 +1200,17 @@ function entryDetailScreen(){
       </div>
     </div>
   `;
+}
+function assignFacultyAndForward(id){
+  const sel = document.getElementById("facAssignSelect");
+  const facName = sel ? sel.value : FAC_USERS[0];
+  const e = entries.find(x=>x.id===id);
+  e.faculty = [facName];
+  const score = document.getElementById("srScoreSelect");
+  e.srScore = score ? Number(score.value) : e.srScore;
+  const box = document.getElementById("commentBox");
+  const text = box && box.value.trim() ? box.value.trim() : "Reviewed and approved.";
+  advanceStatus(id, "In Faculty Review", PERSONA_NAMES.sr, "sr", text + ` Score: ${e.srScore}/5. Assigned to ${facName} for Faculty review.`);
 }
 function reviewAction(id, newStatus, role){
   const box = document.getElementById("commentBox");
@@ -900,16 +1335,54 @@ function screenDashboardAdmin(){
     </div>
   `;
 }
-function screenAdminSettings(){
+const ROUTE_LABEL = {sr_faculty:"SR → Faculty", faculty_only:"Faculty Only", sr_only:"SR Only"};
+function routeSelectHTML(i, route){
+  return `<select class="route-select" onchange="setCaseTypeRoute(${i}, this.value)" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#fbfcfe;">
+    ${Object.keys(ROUTE_LABEL).map(r=>`<option value="${r}" ${route===r?'selected':''}>${ROUTE_LABEL[r]}</option>`).join("")}
+  </select>`;
+}
+function screenDirectory(){
   return `
-    <div class="page-head"><div><h1>Case Type Settings</h1><p>Configure which case types Junior Residents can select when creating an entry.</p></div></div>
+    <div class="page-head"><div><h1>Faculty &amp; Resident Directory</h1><p>Department of Emergency Medicine, AIIMS Delhi — used to populate reviewer assignment and entry authorship across the E-Logbook.</p></div></div>
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${FAC_USERS.length}</div><div class="lbl">Faculty</div></div>
+      <div class="stat-card"><div class="num">${SR_USERS.length}</div><div class="lbl">Senior Residents</div></div>
+      <div class="stat-card"><div class="num">${JR_USERS.length}</div><div class="lbl">Junior Residents</div></div>
+      <div class="stat-card"><div class="num">${FAC_USERS.length+SR_USERS.length+JR_USERS.length}</div><div class="lbl">Total</div></div>
+    </div>
     <div class="card">
-      <h3>Case Types</h3>
-      ${caseTypes.map((c,i)=>`
-        <div class="caseTypeRow">
-          <span>${c.name}</span>
-          <div class="switch ${c.on?'on':''}" onclick="toggleCaseType(${i})"></div>
-        </div>`).join("")}
+      <h3>Faculty <small>name &amp; designation</small></h3>
+      <table><tr><th>Name</th><th>Designation</th></tr>
+        ${FAC_USERS.map(f=>`<tr><td>${f}</td><td>${FAC_DESIGNATIONS[f]}</td></tr>`).join("")}
+      </table>
+    </div>
+    <div class="card">
+      <h3>Senior Residents <small>${SR_USERS.length} total</small></h3>
+      <p style="font-size:12.5px;color:var(--text-600);line-height:1.9;">${SR_USERS.join(" · ")}</p>
+    </div>
+    <div class="card">
+      <h3>Junior Residents <small>${JR_USERS.length} total</small></h3>
+      <p style="font-size:12.5px;color:var(--text-600);line-height:1.9;">${JR_USERS.join(" · ")}</p>
+    </div>
+  `;
+}
+function screenAdminSettings(){
+  const groups = ["Clinical","Procedure","Academic","Course"];
+  return `
+    <div class="page-head"><div><h1>Case Type Settings</h1><p>Configure which case types Junior Residents can select, and the review route each one follows.</p></div></div>
+    <div class="card">
+      <h3>Case Types &amp; Review Routing <small>SR → Faculty (standard) · Faculty Only (skip SR) · SR Only (no Faculty step)</small></h3>
+      ${groups.map(g=>`
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-400);font-weight:700;margin:14px 0 4px;">${g}</div>
+        ${caseTypes.map((c,i)=>({c,i})).filter(x=>x.c.group===g).map(({c,i})=>`
+          <div class="caseTypeRow">
+            <span>${c.name}</span>
+            <div style="display:flex;align-items:center;gap:14px;">
+              ${routeSelectHTML(i, c.route)}
+              <div class="switch ${c.on?'on':''}" onclick="toggleCaseType(${i})"></div>
+            </div>
+          </div>`).join("")}
+      `).join("")}
       <div class="form-actions" style="justify-content:flex-start;">
         <input type="text" id="newCaseType" placeholder="Add new case type..." style="border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;width:240px;">
         <button class="btn btn-ghost btn-sm" onclick="addCaseType()">+ Add</button>
@@ -922,9 +1395,10 @@ function screenAdminSettings(){
   `;
 }
 function toggleCaseType(i){ caseTypes[i].on = !caseTypes[i].on; renderAll(); }
+function setCaseTypeRoute(i, route){ caseTypes[i].route = route; toast(caseTypes[i].name + " now routes: " + ROUTE_LABEL[route]); renderAll(); }
 function addCaseType(){
   const input = document.getElementById("newCaseType");
-  if(input.value.trim()){ caseTypes.push({name:input.value.trim(), on:true}); toast("Case type added."); renderAll(); }
+  if(input.value.trim()){ caseTypes.push({name:input.value.trim(), on:true, route:"sr_faculty", group:"Clinical"}); toast("Case type added."); renderAll(); }
 }
 
 /* ---------------------------------------------------------------
@@ -932,21 +1406,34 @@ function addCaseType(){
 --------------------------------------------------------------- */
 function mainHTML(){
   if(state.screen==="workflowOverview") return screenWorkflowOverview();
+  if(state.screen==="coreCurriculum") return screenCoreCurriculum();
+  if(state.screen==="goalsPosting") return screenGoalsPosting();
+  if(state.screen==="clinicalProcedures") return screenClinicalProcedures();
+  if(state.screen==="exportLogbook") return screenExportLogbook();
   const p = state.persona;
   if(p==="jr"){
     if(state.screen==="createEntry") return screenCreateEntry();
     if(state.screen==="manageEntries") return screenManageEntries();
-    if(state.screen==="exportPortfolio") return screenExportPortfolio();
+    if(state.screen==="rotationLog") return screenRotationLog();
     if(state.screen==="entryDetail") return entryDetailScreen();
     return screenDashboardJR();
   }
-  if(p==="sr" || p==="faculty"){
+  if(p==="sr"){
+    if(state.screen==="createEntry") return screenCreateEntry();
+    if(state.screen==="manageEntries") return screenManageEntries();
+    if(state.screen==="reviewQueue") return screenReviewQueue(p);
+    if(state.screen==="entryDetail") return entryDetailScreen();
+    return screenDashboardReviewer(p);
+  }
+  if(p==="faculty"){
+    if(state.screen==="allLogs") return screenAllLogs();
     if(state.screen==="reviewQueue") return screenReviewQueue(p);
     if(state.screen==="entryDetail") return entryDetailScreen();
     return screenDashboardReviewer(p);
   }
   if(p==="admin"){
     if(state.screen==="adminSettings") return screenAdminSettings();
+    if(state.screen==="directory") return screenDirectory();
     if(state.screen==="entryDetail") return entryDetailScreen();
     return screenDashboardAdmin();
   }
@@ -965,8 +1452,12 @@ function renderAll(){
     initMultiSelects();
   }
   if(state.screen==="manageEntries"){
-    registerList("manage", () => myEntries().filter(e => state.filter==="all" || e.status===state.filter), "jr");
+    registerList("manage", () => myEntries().filter(e => state.filter==="all" || e.status===state.filter), state.persona==="sr" ? "sr-author" : "jr");
     initList("manage");
+  }
+  if(state.screen==="allLogs"){
+    registerList("allLogs", () => entries, "faculty");
+    initList("allLogs");
   }
   if(state.screen==="reviewQueue"){
     registerList("queue", () => assignedTo(state.persona), state.persona);
