@@ -408,30 +408,21 @@ let updateCounter = 8;
 
 /* route: "sr_faculty" = JR->SR->Faculty (standard) | "faculty_only" = JR->Faculty direct | "sr_only" = JR->SR only */
 let caseTypes = [
-  {name:"Clinical Case", on:true, route:"sr_faculty", group:"Clinical"},
-  {name:"Clinical Procedure", on:true, route:"sr_faculty", group:"Clinical"},
-  {name:"Emergency Case", on:true, route:"sr_faculty", group:"Clinical"},
-  {name:"Case-Based Discussion (CBD)", on:true, route:"sr_faculty", group:"Clinical"},
-  {name:"Airway Management", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"IV / Central Venous Access", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"CPR", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Reduction", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Nerve Block", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Procedural Sedation", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Chest Tube", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Lumbar Puncture", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Thoracocentesis", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Paracentesis", on:true, route:"sr_faculty", group:"Procedure"},
-  {name:"Simulation", on:true, route:"sr_faculty", group:"Academic"},
   {name:"Clinical Case Presentation", on:true, route:"faculty_only", group:"Academic"},
-  {name:"Journal Club", on:true, route:"faculty_only", group:"Academic"},
+  {name:"Clinical Procedure", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Simulation", on:true, route:"sr_faculty", group:"Academic"},
   {name:"Radio / Case Conference", on:true, route:"sr_only", group:"Academic"},
-  {name:"Workshop / Conference Attended", on:true, route:"faculty_only", group:"Academic"},
-  {name:"Thesis / Research / Audit", on:true, route:"faculty_only", group:"Academic"},
-  {name:"NRP", on:true, route:"faculty_only", group:"Course"},
-  {name:"PALS", on:true, route:"faculty_only", group:"Course"},
-  {name:"ATLS", on:true, route:"faculty_only", group:"Course"},
+  {name:"Seminar", on:true, route:"sr_faculty", group:"Clinical"},
+  {name:"Journal Club", on:true, route:"faculty_only", group:"Academic"},
+  {name:"Workshop / Conference Attended", on:true, route:"faculty_only", group:"Academic"},  
+  {name:"Publication/ Thesis / Research / Audit / QI", on:true, route:"faculty_only", group:"Academic"},
   {name:"ACLS", on:true, route:"faculty_only", group:"Course"},
+  {name:"BLS", on:true, route:"faculty_only", group:"Course"},
+  {name:"ATLS", on:true, route:"faculty_only", group:"Course"},
+  {name:"PACS", on:true, route:"faculty_only", group:"Course"},
+  {name:"NRP", on:true, route:"faculty_only", group:"Course"},
+  {name:"Achievements & Awards", on:true, route:"faculty_only", group:"Academic"},
+  
 ];
 
 /* Master list for "Log of Clinical Rotations" — condensed from the NMC/DNB EM curriculum
@@ -481,25 +472,43 @@ let rotationCounter = 5;
 /* Sequenced Clinical Procedures list with target counts (per DNB EM minimum-procedure requirements)
    and illustrative in-progress dummy data for the fixed demo JR (Dr. Aastha Tiwari). */
 const PROCEDURES = [
-  {seq:1, name:"Basic Airway Management (BVM)", target:15},
-  {seq:2, name:"Endotracheal Intubation", target:20},
-  {seq:3, name:"IV Cannulation", target:25},
-  {seq:4, name:"Central Venous Access", target:5},
-  {seq:5, name:"CPR / Resuscitation Lead", target:10},
+  {seq:1, name:"Airway Management", target:15},
+  {seq:2, name:"Central Venous Access", target:20},
+  {seq:3, name:"intraosseous infusion", target:25},
+  {seq:4, name:"CPR", target:5},
+  {seq:5, name:"Reduction", target:10},
   {seq:6, name:"Procedural Sedation", target:8},
   {seq:7, name:"Chest Tube Insertion", target:4},
   {seq:8, name:"Lumbar Puncture", target:2},
   {seq:9, name:"Thoracocentesis", target:2},
   {seq:10, name:"Paracentesis", target:2},
   {seq:11, name:"Nerve Block", target:5},
-  {seq:12, name:"Wound Suturing / Reduction", target:15},
+  {seq:12, name:"Wound Suturing", target:15},
 ];
 let procedureProgress = {
-  "Basic Airway Management (BVM)":14, "Endotracheal Intubation":12, "IV Cannulation":25,
-  "Central Venous Access":3, "CPR / Resuscitation Lead":6, "Procedural Sedation":5,
+  "Airway Management":14, "Central Venous Access":12, "intraosseous infusion":25,
+  "CPR":3, "Reduction":6, "Procedural Sedation":5,
   "Chest Tube Insertion":1, "Lumbar Puncture":2, "Thoracocentesis":0,
-  "Paracentesis":1, "Nerve Block":2, "Wound Suturing / Reduction":9,
+  "Paracentesis":1, "Nerve Block":2, "Wound Suturing":9,
 };
+
+let procedureLogs = [
+  {
+    id:1, procedure:"Airway Management", date:"2026-07-01", resident:"Dr. Aastha Tiwari",
+    residentRole:"jr", patientRef:"EM-2026-0701-14", location:"Emergency Department",
+    participation:"Performed under supervision", attempts:1, supervisor:"Dr. Pooja Raj",
+    outcome:"Successful", complications:"None", notes:"Video laryngoscopy used during simulation.",
+    status:"In SR Review", entryId:4
+  },
+  {
+    id:2, procedure:"Central Venous Access", date:"2026-06-11", resident:"Dr. Aastha Tiwari",
+    residentRole:"jr", patientRef:"EM-2026-0611-08", location:"Emergency Department",
+    participation:"Performed under supervision", attempts:1, supervisor:"Dr. Sheena Arora",
+    outcome:"Successful", complications:"None", notes:"Ultrasound-guided right internal jugular approach.",
+    status:"In Faculty Review", entryId:2
+  }
+];
+let procedureLogCounter = 2;
 
 const MODULES_STANDARD = [
   {key:"coreCurriculum", icon:"📘", label:"Core Curriculum of EM", desc:"NMC/DNB curriculum reference & download"},
@@ -594,7 +603,7 @@ function setPersona(p){
 function goto(screen, id){
   history.push({persona: state.persona, screen: state.screen, entryId: state.entryId});
   state.screen = screen; state.entryId = id || null;
-  if(screen === "createEntry") resetFormState();
+  if(screen === "createEntry" || screen === "createProcedure") resetFormState();
   renderAll(); window.scrollTo({top:0, behavior:"instant"});
 }
 function goBack(){
@@ -611,6 +620,7 @@ function myEntries(){
   return entries.filter(e => (e.authorRole || "jr") === role && e.jr === PERSONA_NAMES[role]);
 }
 function authorRoleLabel(e){ return (e.authorRole || "jr") === "sr" ? "SR" : "JR"; }
+function entryRoute(e){ return e.route || ((e.authorRole || "jr") === "sr" ? "faculty_only" : "sr_faculty"); }
 function assignedTo(role){
   const name = PERSONA_NAMES[role];
   return entries.filter(e => role === "sr" ? e.srs.includes(name) : e.faculty.includes(name));
@@ -774,7 +784,7 @@ function screenCreateEntry(){
     <div class="card">
       <h3>Basic Details</h3>
       <div class="form-grid">
-        <div class="field"><label>Case Type</label><select id="caseTypeSelect" onchange="onCaseTypeChange()">${types}</select></div>
+        <div class="field"><label>Type of Case</label><select id="caseTypeSelect" onchange="onCaseTypeChange()">${types}</select></div>
         <div class="field"><label>Case Title</label><input type="text" id="entryTitle" placeholder="e.g. ST-Elevation MI — ED Resuscitation"></div>
         <div class="field"><label>Activity Date</label><input type="date" id="entryDate"></div>
         <div class="field full"><label>Case Description</label><textarea id="entryDescription" placeholder="Describe the clinical case or activity..."></textarea></div>
@@ -796,10 +806,10 @@ function screenCreateEntry(){
     </div>
     <div class="card">
       <h3>Supporting Documents</h3>
-      <div class="dropzone"><input type = file > Drag files here or click to upload &nbsp;·&nbsp; PDF, DOC/DOCX, images, video </> </div>
+      <div class="dropzone"><input id="entryFiles" type="file" multiple> Drag files here or click to upload &nbsp;·&nbsp; PDF, DOC/DOCX, images, video</div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-ghost" onclick="toast('Draft saved.')">Save as Draft</button>
+      <button class="btn btn-ghost" onclick="saveDraftEntry()">Save as Draft</button>
       <button class="btn btn-primary" onclick="submitForRoute()">${submitButtonLabel(route)}</button>
     </div>
   `;
@@ -829,6 +839,34 @@ function onCaseTypeChange(){
   document.getElementById("facFieldWrap").style.display = route==="faculty_only" ? "" : "none";
   document.querySelector(".form-actions .btn-primary").textContent = submitButtonLabel(route);
 }
+function saveDraftEntry(){
+  const title = (document.getElementById("entryTitle").value || "Untitled activity").trim();
+  const activityDate = document.getElementById("entryDate").value || new Date().toISOString().slice(0,10);
+  const authorRole = state.persona === "sr" ? "sr" : "jr";
+  const author = PERSONA_NAMES[authorRole];
+  const fileInput = document.getElementById("entryFiles");
+  entries.push({
+    id: Math.max(0,...entries.map(e=>e.id))+1,
+    title,
+    type: document.getElementById("caseTypeSelect").value,
+    status:"New",
+    authorRole,
+    route: authorRole === "sr" ? "faculty_only" : (caseTypes.find(c=>c.name===document.getElementById("caseTypeSelect").value)?.route || "sr_faculty"),
+    jr:author,
+    srs: authorRole === "jr" ? [...formState.srSelected] : [],
+    faculty:[...formState.facSelected],
+    start:activityDate,
+    end:activityDate,
+    updatedAt:++updateCounter,
+    description:document.getElementById("entryDescription").value.trim(),
+    reflection:document.getElementById("entryReflection").value.trim(),
+    notes:"",
+    attachments:fileInput ? Array.from(fileInput.files).map(file=>file.name) : [],
+    comments:[]
+  });
+  toast("Draft saved.");
+  goto("manageEntries");
+}
 function submitForRoute(){
   const isSR = state.persona === "sr";
   const sel = document.getElementById("caseTypeSelect").value;
@@ -843,19 +881,28 @@ function submitForRoute(){
   const status = isSR || route==="faculty_only" ? "In Faculty Review" : "In SR Review";
   const authorRole = isSR ? "sr" : "jr";
   const author = PERSONA_NAMES[authorRole];
+  const fileInput = document.getElementById("entryFiles");
+  const attachments = fileInput ? Array.from(fileInput.files).map(file=>file.name) : [];
+  const submitText = isSR
+    ? "Submitting my SR activity for Faculty review."
+    : route==="faculty_only"
+      ? "Submitting directly for Faculty review."
+      : route==="sr_only"
+        ? "Submitting for final SR review."
+        : "Submitting for SR review.";
   const newEntry = {
     id: Math.max(0,...entries.map(e=>e.id))+1, title, type:sel, status, authorRole, jr:author,
-    srs, faculty, start:activityDate, end:activityDate, updatedAt:++updateCounter,
-    description, reflection, notes:"", attachments:[],
-    comments:[{author,role:authorRole,text:isSR ? "Submitting my SR activity for Faculty review." : "Submitting for review.",time:nowStamp()}]
+    route, srs, faculty, start:activityDate, end:activityDate, updatedAt:++updateCounter,
+    description, reflection, notes:"", attachments,
+    comments:[{author,role:authorRole,text:submitText,time:nowStamp()}]
   };
   entries.push(newEntry);
-  toast(isSR ? "SR entry submitted directly for Faculty review." : route==="faculty_only" ? "Entry submitted directly for Faculty review." : "Entry submitted for SR review.");
+  toast(isSR ? "SR entry submitted directly for Faculty review." : route==="faculty_only" ? "Entry submitted directly for Faculty review." : route==="sr_only" ? "Entry submitted for final SR review." : "Entry submitted for SR review.");
   goto("manageEntries");
 }
 function screenManageEntries(){
   const filter = state.filter || "all";
-  const statuses = ["all","New","In SR Review","SR Requested Changes","Faculty Requested Changes","Faculty Approved","Faculty Rejected"];
+  const statuses = ["all","New","In SR Review","SR Requested Changes","In Faculty Review","Faculty Requested Changes","Faculty Approved","Faculty Rejected"];
   return `
     <div class="page-head">
       <div><h1>${state.persona==="sr" ? "Manage My SR Entries" : "Manage My Entries"}</h1><p>Track status, review comments and submission history for each entry.</p></div>
@@ -937,6 +984,9 @@ function toggleGoals(id){
   row.style.display = row.style.display==="none" ? "" : "none";
 }
 function screenExportLogbook(){
+  const exportRole = state.persona === "sr" ? "sr" : "jr";
+  const exportName = PERSONA_NAMES[exportRole];
+  const exportRoleLabel = exportRole === "sr" ? "Senior Resident" : "Junior Resident";
   const approved = sortByUpdated(myEntries().filter(e=>e.status==="Faculty Approved"));
   const allMine = sortByUpdated(myEntries());
   const doneProc = Object.values(procedureProgress).reduce((a,b)=>a+b,0);
@@ -945,7 +995,7 @@ function screenExportLogbook(){
     <div class="page-head"><div><h1>Export Logbook</h1><p>Generate a consolidated export of the resident profile, activities, procedures, and rotation history.</p></div></div>
     <div class="card">
       <h3>What's Included</h3>
-      <div class="kv"><div class="k">Resident Profile</div><div>${PERSONA_NAMES.jr} · Junior Resident · Emergency Medicine</div></div>
+      <div class="kv"><div class="k">Resident Profile</div><div>${exportName} · ${exportRoleLabel} · Emergency Medicine</div></div>
       <div class="kv"><div class="k">E-Logbook Entries</div><div>${allMine.length} total (${approved.length} Faculty Approved)</div></div>
       <div class="kv"><div class="k">Clinical Procedures</div><div>${doneProc} / ${targetProc} logged across ${PROCEDURES.length} procedure types</div></div>
       <div class="kv"><div class="k">Clinical Rotations</div><div>${rotationLog.length} postings logged</div></div>
@@ -997,7 +1047,16 @@ function screenGoalsPosting(){
       </div>`).join("")}
   `;
 }
+function procedureStatusBadge(status){
+  return statusMeta[status] ? badge(status) : `<span class="badge st-new">${status}</span>`;
+}
+function residentProcedureLogs(){
+  if(state.persona==="faculty" || state.persona==="admin") return procedureLogs;
+  const role = state.persona==="sr" ? "sr" : "jr";
+  return procedureLogs.filter(log=>log.residentRole===role && log.resident===PERSONA_NAMES[role]);
+}
 function screenClinicalProcedures(){
+  const logs = residentProcedureLogs();
   const rows = PROCEDURES.map(p=>{
     const done = procedureProgress[p.name] || 0;
     const pct = Math.min(100, Math.round((done/p.target)*100));
@@ -1013,20 +1072,139 @@ function screenClinicalProcedures(){
           </div>
         </td>
         <td>${pct>=100?'<span class="badge st-approved">Complete</span>':'<span class="badge st-review">In Progress</span>'}</td>
+        <td>${state.persona==="jr" || state.persona==="sr" ? `<button class="btn btn-ghost btn-sm" onclick="goto('createProcedure');setTimeout(()=>selectProcedure('${p.name.replace(/'/g,"\\'")}'),0)">Log</button>` : ""}</td>
       </tr>`;
   }).join("");
   return `
     <div class="page-head">
-      <div><h1>Clinical Procedures</h1><p>Sequenced procedure checklist with progress against required minimum counts.</p></div>
-      <button class="btn btn-primary" onclick="goto('createEntry')">+ Log a Procedure</button>
+      <div><h1>Clinical Procedures</h1><p>Log each procedure separately, submit it for review, and track progress against the required minimum count.</p></div>
+      ${state.persona==="jr" || state.persona==="sr" ? `<button class="btn btn-primary" onclick="goto('createProcedure')">+ Add Clinical Procedure</button>` : ""}
     </div>
     <div class="card">
+      <h3>Procedure Progress <small>updates immediately when a new procedure is submitted</small></h3>
       <table>
-        <tr><th>Seq</th><th>Procedure</th><th>Logged / Target</th><th>Progress</th><th>Status</th></tr>
+        <tr><th>Seq</th><th>Procedure</th><th>Logged / Target</th><th>Progress</th><th>Status</th><th></th></tr>
         ${rows}
       </table>
     </div>
+    <div class="card">
+      <h3>${state.persona==="faculty" || state.persona==="admin" ? "All Procedure Logs" : "My Procedure History"} <small>${logs.length} records</small></h3>
+      <table>
+        <tr><th>Date</th><th>Procedure</th><th>Resident</th><th>Participation</th><th>Outcome</th><th>Supervisor</th><th>Status</th></tr>
+        ${sortByUpdated(logs.map((x,i)=>({...x,updatedAt:x.id}))).map(log=>`
+          <tr class="rowlink" onclick="${log.entryId ? `goto('entryDetail',${log.entryId})` : ""}">
+            <td>${log.date}</td>
+            <td><b>${log.procedure}</b><div class="entry-sub">${log.patientRef || "No patient reference"}</div></td>
+            <td>${log.resident} <span class="role-chip">${log.residentRole.toUpperCase()}</span></td>
+            <td>${log.participation}</td>
+            <td>${log.outcome}</td>
+            <td>${log.supervisor || "Not assigned"}</td>
+            <td>${procedureStatusBadge(log.status)}</td>
+          </tr>`).join("") || `<tr><td colspan="7" class="empty">No procedure logs available.</td></tr>`}
+      </table>
+    </div>
   `;
+}
+function selectProcedure(name){
+  const el=document.getElementById("procedureName");
+  if(el) el.value=name;
+}
+function screenCreateProcedure(){
+  const isSR=state.persona==="sr";
+  const options=PROCEDURES.map(p=>`<option value="${p.name}">${p.seq}. ${p.name}</option>`).join("");
+  return `
+    <div class="page-head">
+      <div><h1>Log Clinical Procedure</h1><p>Capture structured procedural information and submit it through the resident review workflow.</p></div>
+    </div>
+    <div class="card">
+      <h3>Procedure Information</h3>
+      <div class="form-grid">
+        <div class="field"><label>Clinical Procedure</label><select id="procedureName">${options}</select></div>
+        <div class="field"><label>Date Performed</label><input type="date" id="procedureDate"></div>
+        <div class="field"><label>Patient / Case Reference</label><input type="text" id="procedurePatientRef" placeholder="Use a non-identifiable case reference"></div>
+        <div class="field"><label>Location / Posting</label><select id="procedureLocation">
+          <option>Emergency Department</option><option>Trauma Bay</option><option>ICU</option><option>Operation Theatre</option><option>Simulation Lab</option><option>Other</option>
+        </select></div>
+        <div class="field"><label>Participation Level</label><select id="procedureParticipation">
+          <option>Observed</option><option>Assisted</option><option selected>Performed under supervision</option><option>Performed independently</option><option>Supervised another resident</option>
+        </select></div>
+        <div class="field"><label>Number of Attempts</label><input type="text" id="procedureAttempts" value="1" inputmode="numeric"></div>
+        <div class="field"><label>Outcome</label><select id="procedureOutcome">
+          <option selected>Successful</option><option>Partially successful</option><option>Unsuccessful</option><option>Converted to alternate technique</option>
+        </select></div>
+        <div class="field"><label>Complications</label><select id="procedureComplications">
+          <option selected>None</option><option>Minor complication</option><option>Major complication</option><option>Not applicable</option>
+        </select></div>
+        <div class="field full"><label>Procedure Notes</label><textarea id="procedureNotes" placeholder="Indication, technique, equipment, findings, learning points, and complication details..."></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Reviewer Assignment</h3>
+      <div class="hint" style="margin-bottom:12px;">${isSR ? "Senior Resident procedure logs are submitted directly to Faculty." : "Junior Resident procedure logs are first submitted to a Senior Resident for scoring and review."}</div>
+      <div class="form-grid">
+        <div style="${isSR?'display:none;':''}">${msFieldHTML("sr","Senior Resident")}</div>
+        <div style="${isSR?'':'display:none;'}">${msFieldHTML("fac","Faculty Member")}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Supporting Documents</h3>
+      <div class="dropzone"><input id="procedureFiles" type="file" multiple> Upload checklist, image, report, or other supporting document</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="saveProcedure(true)">Save Procedure Draft</button>
+      <button class="btn btn-primary" onclick="saveProcedure(false)">${isSR?"Submit to Faculty":"Submit to Senior Resident"}</button>
+    </div>
+  `;
+}
+function saveProcedure(asDraft){
+  const procedure=document.getElementById("procedureName").value;
+  const isSR=state.persona==="sr";
+  const residentRole=isSR?"sr":"jr";
+  const resident=PERSONA_NAMES[residentRole];
+  const date=document.getElementById("procedureDate").value || new Date().toISOString().slice(0,10);
+  const attempts=Math.max(1,Number(document.getElementById("procedureAttempts").value)||1);
+  const status=asDraft ? "New" : (isSR ? "In Faculty Review" : "In SR Review");
+  const supervisor=isSR
+    ? (formState.facSelected[0] || PERSONA_NAMES.faculty)
+    : (formState.srSelected[0] || PERSONA_NAMES.sr);
+  const files=Array.from(document.getElementById("procedureFiles").files||[]).map(f=>f.name);
+  const logId=++procedureLogCounter;
+  const entryId=Math.max(0,...entries.map(e=>e.id))+1;
+  const procedureData={
+    id:logId, procedure, date, resident, residentRole,
+    patientRef:document.getElementById("procedurePatientRef").value.trim(),
+    location:document.getElementById("procedureLocation").value,
+    participation:document.getElementById("procedureParticipation").value,
+    attempts, supervisor,
+    outcome:document.getElementById("procedureOutcome").value,
+    complications:document.getElementById("procedureComplications").value,
+    notes:document.getElementById("procedureNotes").value.trim(),
+    status, entryId
+  };
+  procedureLogs.push(procedureData);
+  if(!asDraft) procedureProgress[procedure]=(procedureProgress[procedure]||0)+1;
+  const faculty=isSR ? [supervisor] : [];
+  const srs=isSR ? [] : [supervisor];
+  entries.push({
+    id:entryId,
+    title:`${procedure} — Clinical Procedure`,
+    type:"Clinical Procedure",
+    status,
+    authorRole:residentRole,
+    route:isSR?"faculty_only":"sr_faculty",
+    jr:resident,
+    srs,
+    faculty,
+    start:date,end:date,updatedAt:++updateCounter,
+    description:`${procedure} performed at ${procedureData.location}. Participation: ${procedureData.participation}. Attempts: ${attempts}. Outcome: ${procedureData.outcome}.`,
+    reflection:procedureData.notes,
+    notes:`Patient/Case Reference: ${procedureData.patientRef || "Not provided"}. Complications: ${procedureData.complications}.`,
+    attachments:files,
+    procedure:procedureData,
+    comments:asDraft?[]:[{author:resident,role:residentRole,text:isSR?"Submitting this clinical procedure for Faculty review.":"Submitting this clinical procedure for SR review.",time:nowStamp()}]
+  });
+  toast(asDraft ? "Procedure draft saved." : "Clinical procedure submitted and progress updated.");
+  goto("clinicalProcedures");
 }
 
 /* ---------------------------------------------------------------
@@ -1147,17 +1325,34 @@ function entryDetailScreen(){
     actionPanel = `
       <div class="action-panel">
         <h4>Senior Resident Review</h4>
-        <p>Score the JR activity from 1–5, add feedback, then request changes or forward it to Faculty.</p>
+        <p>Score the JR activity from 1–5, add feedback, then request changes or ${entryRoute(e)==="sr_only" ? "approve it as the final reviewer" : "forward it to Faculty"}.</p>
         <div class="field"><label>JR Activity Score (1–5)</label><select id="srScoreSelect">${[1,2,3,4,5].map(n=>`<option value="${n}" ${e.srScore===n?'selected':''}>${n} / 5</option>`).join("")}</select></div>
         <textarea id="commentBox" placeholder="Add a comment for the Junior Resident..."></textarea>
-        <div class="field" style="max-width:320px;margin-top:10px;"><label>Assign Faculty Reviewer</label><select id="facAssignSelect">${facOptions}</select></div>
+        ${entryRoute(e)==="sr_only" ? "" : `<div class="field" style="max-width:320px;margin-top:10px;"><label>Assign Faculty Reviewer</label><select id="facAssignSelect">${facOptions}</select></div>`}
         <div class="action-row">
           <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'SR Requested Changes','sr')">Request Changes</button>
-          <button class="btn btn-primary btn-sm" onclick="assignFacultyAndForward(${e.id})">Score, Approve &amp; Send to Faculty</button>
+          <button class="btn btn-primary btn-sm" onclick="approveSRReview(${e.id})">${entryRoute(e)==="sr_only" ? "Score &amp; Approve (Final)" : "Score, Approve &amp; Send to Faculty"}</button>
         </div>
       </div>`;
   } else if(role==="sr"){
     actionPanel = `<div class="locked-note">${authorRole==="sr" ? "This is an SR-authored entry." : "No SR review action is available for this entry."}</div>`;
+  }
+  if(role==="faculty" && e.status==="In Faculty Review" && e.faculty.includes(PERSONA_NAMES.faculty)){
+    actionPanel = `
+      <div class="action-panel">
+        <h4>Faculty Review</h4>
+        <p>Provide final academic review — approve, reject, or request modifications.</p>
+        <textarea id="commentBox" placeholder="Add academic feedback..."></textarea>
+        <div class="action-row">
+          <button class="btn btn-danger btn-sm" onclick="reviewAction(${e.id},'Faculty Rejected','faculty')">Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="reviewAction(${e.id},'Faculty Requested Changes','faculty')">Request Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="reviewAction(${e.id},'Faculty Approved','faculty')">Approve (Final)</button>
+        </div>
+      </div>`;
+  } else if(role==="faculty" && !e.faculty.includes(PERSONA_NAMES.faculty)){
+    actionPanel = `<div class="locked-note">You are not an assigned Faculty reviewer on this entry.</div>`;
+  } else if(role==="faculty"){
+    actionPanel = `<div class="locked-note">${locked ? "Approved and locked — this record is permanent." : `No action required — this entry is at status "${e.status}".`}</div>`;
   }
   if(role==="admin"){
     actionPanel = `<div class="locked-note">Administrators have full read access for support and audit purposes. Status changes are made by the assigned SR / Faculty reviewers.</div>`;
@@ -1176,6 +1371,14 @@ function entryDetailScreen(){
           <div class="kv"><div class="k">Description</div><div>${e.description || '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
           <div class="kv"><div class="k">What did you learn?</div><div>${(e.reflection||e.notes) ? [e.reflection,e.notes].filter(Boolean).join(" ") : '<span style="color:var(--text-400)">Not yet added</span>'}</div></div>
           <div class="kv"><div class="k">Author Role</div><div><span class="role-chip">${authorRoleLabel(e)}</span></div></div>
+          ${e.procedure ? `
+          <div class="kv"><div class="k">Procedure</div><div><b>${e.procedure.procedure}</b></div></div>
+          <div class="kv"><div class="k">Patient / Case Ref.</div><div>${e.procedure.patientRef || "Not provided"}</div></div>
+          <div class="kv"><div class="k">Location</div><div>${e.procedure.location}</div></div>
+          <div class="kv"><div class="k">Participation</div><div>${e.procedure.participation}</div></div>
+          <div class="kv"><div class="k">Attempts</div><div>${e.procedure.attempts}</div></div>
+          <div class="kv"><div class="k">Outcome</div><div>${e.procedure.outcome}</div></div>
+          <div class="kv"><div class="k">Complications</div><div>${e.procedure.complications}</div></div>` : ""}
           <div class="kv"><div class="k">Senior Resident(s)</div><div>${e.srs.length ? e.srs.map(s=>`<span class="role-chip">${s}</span>`).join("") : '<span style="color:var(--text-400)">Not applicable</span>'}</div></div>
           <div class="kv"><div class="k">SR Activity Score</div><div>${e.srScore ? `<b>${e.srScore} / 5</b>` : '<span style="color:var(--text-400)">Not scored</span>'}</div></div>
           <div class="kv"><div class="k">Faculty</div><div>${e.faculty.map(s=>`<span class="role-chip">${s}</span>`).join("")}</div></div>
@@ -1201,17 +1404,22 @@ function entryDetailScreen(){
     </div>
   `;
 }
-function assignFacultyAndForward(id){
-  const sel = document.getElementById("facAssignSelect");
-  const facName = sel ? sel.value : FAC_USERS[0];
+function approveSRReview(id){
   const e = entries.find(x=>x.id===id);
-  e.faculty = [facName];
   const score = document.getElementById("srScoreSelect");
   e.srScore = score ? Number(score.value) : e.srScore;
   const box = document.getElementById("commentBox");
   const text = box && box.value.trim() ? box.value.trim() : "Reviewed and approved.";
+  if(entryRoute(e)==="sr_only"){
+    advanceStatus(id, "Faculty Approved", PERSONA_NAMES.sr, "sr", text + ` Score: ${e.srScore}/5. Final SR approval.`);
+    return;
+  }
+  const sel = document.getElementById("facAssignSelect");
+  const facName = sel ? sel.value : FAC_USERS[0];
+  e.faculty = [facName];
   advanceStatus(id, "In Faculty Review", PERSONA_NAMES.sr, "sr", text + ` Score: ${e.srScore}/5. Assigned to ${facName} for Faculty review.`);
 }
+function assignFacultyAndForward(id){ approveSRReview(id); }
 function reviewAction(id, newStatus, role){
   const box = document.getElementById("commentBox");
   const text = box && box.value.trim() ? box.value.trim() : (newStatus.includes("Requested") ? "Please review and revise the noted sections." : (newStatus.includes("Rejected") ? "This submission does not meet requirements." : "Reviewed and approved."));
@@ -1409,6 +1617,7 @@ function mainHTML(){
   if(state.screen==="coreCurriculum") return screenCoreCurriculum();
   if(state.screen==="goalsPosting") return screenGoalsPosting();
   if(state.screen==="clinicalProcedures") return screenClinicalProcedures();
+  if(state.screen==="createProcedure") return screenCreateProcedure();
   if(state.screen==="exportLogbook") return screenExportLogbook();
   const p = state.persona;
   if(p==="jr"){
